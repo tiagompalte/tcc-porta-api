@@ -1,0 +1,209 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>br.com.utfpr</groupId>
+  <artifactId>porta-api</artifactId>
+  <version>1.0.0</version>
+  <packaging>war</packaging>
+  <name>porta-api</name>
+  <description>API do projeto de TCC</description>
+  
+ <properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+		<java.version>1.8</java.version>
+		<maven-compiler-pluging.version>3.2</maven-compiler-pluging.version>
+		<maven-war-pluging.version>2.6</maven-war-pluging.version>
+		
+		<!-- Spring MVC -->
+		<spring-framework.version>4.3.0.RELEASE</spring-framework.version>
+
+		<!-- Servlet API -->
+		<servlet.version>3.1.0</servlet.version>
+		
+		<!-- Thymeleaf -->
+		<thymeleaf.version>3.0.0.RELEASE</thymeleaf.version>
+				
+		<!-- Thymeleaf - Layout Dialect -->
+		<thymeleaf-layout-dialect.version>2.0.0</thymeleaf-layout-dialect.version>
+				
+		<!-- thumbnailator - Gerar Thumbnail -->
+		<!-- https://github.com/coobird/thumbnailator -->
+		<thumbnailator.version>0.4.8</thumbnailator.version>
+
+		<!-- Thymeleaf extras data attribute -->
+		<thymeleaf-extras-data-attribute.version>2.0.1</thymeleaf-extras-data-attribute.version>
+
+		<!-- Cache - Guava -->
+		<guava.version>19.0</guava.version>
+
+		<!-- Spring Security -->
+		<spring-security.version>4.1.1.RELEASE</spring-security.version>
+
+		<!-- Thymeleaf - Extras Spring Security -->
+		<thymeleaf-extras-springsecurity4.version>3.0.0.RELEASE</thymeleaf-extras-springsecurity4.version>
+
+		<!-- Thymeleaf - Layout Dialect -->
+		<thymeleaf-layout-dialect.version>2.0.0</thymeleaf-layout-dialect.version>
+		
+		<!-- Cache - Guava -->
+		<guava.version>19.0</guava.version>
+		
+	</properties>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-pluging.version}</version>
+				<configuration>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>${maven-war-pluging.version}</version>
+				<configuration>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>${flyway-maven-plugin.version}</version>
+				<configuration>
+					<driver>com.mysql.jdbc.Driver</driver>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-framework-bom</artifactId>
+				<version>${spring-framework.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+		
+	<dependencies>
+		<!-- Spring MVC -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- Servlet API -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>${servlet.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Thymeleaf -->
+		<dependency>
+			<groupId>org.thymeleaf</groupId>
+			<artifactId>thymeleaf</artifactId>
+			<version>${thymeleaf.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.thymeleaf</groupId>
+			<artifactId>thymeleaf-spring4</artifactId>
+			<version>${thymeleaf.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		        
+        <!-- Thymeleaf - Layout Dialect -->
+		<dependency>
+    		<groupId>nz.net.ultraq.thymeleaf</groupId>
+    		<artifactId>thymeleaf-layout-dialect</artifactId>
+    		<version>${thymeleaf-layout-dialect.version}</version>
+		</dependency>
+		
+		<!-- Spring Context Support -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context-support</artifactId>
+			<scope>compile</scope>
+		</dependency>
+		
+		<!-- Spring Security -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+			<version>${spring-security.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<version>${spring-security.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		
+		<!-- Thymeleaf - Extras Spring Security -->
+		<dependency>
+		    <groupId>org.thymeleaf.extras</groupId>
+		    <artifactId>thymeleaf-extras-springsecurity4</artifactId>
+		    <version>${thymeleaf-extras-springsecurity4.version}</version>
+		    <scope>compile</scope>
+		</dependency>
+		
+		<!-- Thymeleaf extras data attribute -->
+		<dependency>
+    		<groupId>com.github.mxab.thymeleaf.extras</groupId>
+    		<artifactId>thymeleaf-extras-data-attribute</artifactId>
+    		<version>${thymeleaf-extras-data-attribute.version}</version>
+    		<scope>compile</scope>
+		</dependency>
+		
+		<!-- Cache - Guava -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>${guava.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>br.com.utfpr</groupId>
+			<artifactId>porta-servico</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId> 
+			<artifactId>jjwt</artifactId> 
+			<version>0.7.0</version>
+         </dependency>
+		
+	</dependencies>
+	
+	<repositories>
+		<repository>
+			<id>sonatype-nexus-snapshots</id>
+    		<name>Sonatype Nexus Snapshots</name>
+    		<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    		<snapshots>
+      			<enabled>true</enabled>
+    		</snapshots>
+		</repository>
+	</repositories>
+  
+</project>
