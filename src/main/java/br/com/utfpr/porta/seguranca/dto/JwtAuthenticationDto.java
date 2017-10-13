@@ -1,10 +1,14 @@
 package br.com.utfpr.porta.seguranca.dto;
 
+import javax.validation.constraints.NotNull;
+
 import org.hibernate.validator.constraints.NotEmpty;
 
 public class JwtAuthenticationDto {
 
+	@NotNull(message = "Código não informado")
 	private String codigo;
+	@NotNull(message = "Senha não informada")
 	private String senha;
 
 	public JwtAuthenticationDto() {}

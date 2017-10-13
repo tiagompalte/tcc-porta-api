@@ -1,5 +1,6 @@
 package br.com.utfpr.porta.controle;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -8,6 +9,7 @@ import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +29,7 @@ import br.com.utfpr.porta.response.Response;
 import br.com.utfpr.porta.seguranca.dto.JwtAuthenticationDto;
 import br.com.utfpr.porta.seguranca.dto.TokenDto;
 import br.com.utfpr.porta.seguranca.util.JwtTokenUtil;
+import br.com.utfpr.porta.util.Criptografia;
 
 @Controller
 @RequestMapping("/token")
@@ -36,6 +39,7 @@ public class AutenticacaoControle {
 	private static final Logger log = LoggerFactory.getLogger(AutenticacaoControle.class);
 	private static final String TOKEN_HEADER = "Authorization";
 	private static final String BEARER_PREFIX = "Bearer ";
+	private static final String CHAVE = "AzSJFHSJFBSJFHSJ";
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
@@ -64,11 +68,25 @@ public class AutenticacaoControle {
 			result.getAllErrors().forEach(error -> response.getErrors().add(error.getDefaultMessage()));
 			return ResponseEntity.badRequest().body(response);
 		}
-
-		log.info("Gerando token para a porta de código {}.", authenticationDto.getCodigo());
-		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(authenticationDto.getCodigo(), authenticationDto.getSenha()));
-		SecurityContextHolder.getContext().setAuthentication(authentication);
+		
+		try {
+			authenticationDto.setSenha(Criptografia.decode(authenticationDto.getSenha(), CHAVE));
+		}
+		catch(Exception e) {
+			response.setErrors(Arrays.asList(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+				
+		try {			
+			log.info("Gerando token para a porta de código {}.", authenticationDto.getCodigo());
+			Authentication authentication = authenticationManager.authenticate(
+					new UsernamePasswordAuthenticationToken(authenticationDto.getCodigo(), authenticationDto.getSenha()));
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+		}
+		catch(Exception e) {
+			response.setErrors(Arrays.asList(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+		}
 
 		UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationDto.getCodigo());
 		String token = jwtTokenUtil.obterToken(userDetails);
