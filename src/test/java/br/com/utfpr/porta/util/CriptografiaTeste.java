@@ -6,7 +6,7 @@ import java.io.UnsupportedEncodingException;
 
 import org.junit.Test;
 
-public class CriptogragiaTeste {
+public class CriptografiaTeste {
 
 	@Test
 	public void testeDecode() {
