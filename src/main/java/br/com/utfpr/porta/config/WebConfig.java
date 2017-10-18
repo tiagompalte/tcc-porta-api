@@ -23,6 +23,7 @@ import br.com.utfpr.porta.controle.Controle;
 @EnableSpringDataWebSupport
 public class WebConfig extends WebMvcConfigurerAdapter implements ApplicationContextAware {
 	
+	@SuppressWarnings("unused")
 	private ApplicationContext applicationContext;
 
 	@Override
