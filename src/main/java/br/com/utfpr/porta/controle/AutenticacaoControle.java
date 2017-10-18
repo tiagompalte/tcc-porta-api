@@ -61,6 +61,7 @@ public class AutenticacaoControle {
 	@PostMapping
 	public ResponseEntity<Response<TokenDto>> gerarTokenJwt(@Valid @RequestBody JwtAuthenticationDto authenticationDto,
 			BindingResult result) throws AuthenticationException {
+		
 		Response<TokenDto> response = new Response<TokenDto>();
 
 		if (result.hasErrors()) {

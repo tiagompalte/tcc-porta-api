@@ -20,14 +20,18 @@ public class Response<T> {
 	}
 
 	public List<String> getErrors() {
-		if (this.errors == null) {
-			this.errors = new ArrayList<String>();
-		}
 		return errors;
 	}
 
 	public void setErrors(List<String> errors) {
 		this.errors = errors;
+	}
+	
+	public void addError(String error) {
+		if(errors == null) {
+			errors = new ArrayList<>();
+		}
+		errors.add(error);
 	}
 
 }
