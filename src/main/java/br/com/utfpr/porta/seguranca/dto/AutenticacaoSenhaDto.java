@@ -4,23 +4,23 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
-public class JwtAuthenticationDto {
-
-	@NotNull(message = "Código não informado")
-	@NotEmpty(message = "Código não pode ser vazio")
-	private String codigo;
+public class AutenticacaoSenhaDto {
+	
+	@NotNull(message = "RFID não informado")
+	@NotEmpty(message = "RFID não pode ser vazio")
+	private String rfid;
 	@NotNull(message = "Senha não informada")
 	@NotEmpty(message = "Senha não pode ser vazia")
 	private String senha;
 
-	public JwtAuthenticationDto() {}
+	public AutenticacaoSenhaDto() {}
 	
-	public String getCodigo() {
-		return codigo;
+	public String getRfid() {
+		return rfid;
 	}
 
-	public void setCodigo(String codigo) {
-		this.codigo = codigo;
+	public void setRfid(String rfid) {
+		this.rfid = rfid;
 	}
 	
 	public String getSenha() {
@@ -33,8 +33,8 @@ public class JwtAuthenticationDto {
 
 	@Override
 	public String toString() {
-		return "JwtAuthenticationRequestDto [codigo=" + codigo + ", senha=" + senha + "]";
+		return "AutenticacaoSenhaDto [rfid=" + rfid + ", senha=" + senha + "]";
 	}
 
-}
 
+}
