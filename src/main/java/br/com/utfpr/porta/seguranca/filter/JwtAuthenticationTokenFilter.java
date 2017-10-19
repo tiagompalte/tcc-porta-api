@@ -19,8 +19,8 @@ import br.com.utfpr.porta.seguranca.util.JwtTokenUtil;
 
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
-	private static final String AUTH_HEADER = "Authorization";
-	private static final String BEARER_PREFIX = "Bearer ";
+	private static final String AUTH_HEADER = "authorization";
+	private static final String BEARER_PREFIX = "Bearer";
 
 	@Autowired
 	private UserDetailsService userDetailsService;
@@ -31,22 +31,48 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
 			throws ServletException, IOException {
+		
 		String token = request.getHeader(AUTH_HEADER);
-		if (token != null && token.startsWith(BEARER_PREFIX)) {
-			token = token.substring(BEARER_PREFIX.length());
+		
+		if (token != null && token.startsWith(BEARER_PREFIX) && token.length() > BEARER_PREFIX.length() + 1) {
+			token = token.substring(BEARER_PREFIX.length() + 1);
 		}
-		String username = jwtTokenUtil.getUsernameFromToken(token);
+		
+		if(token.isEmpty()) {
+			response.sendError(400, "Token não informado");
+			return;
+		}
+		
+		String username = null;
+		try {
+			username = jwtTokenUtil.getUsernameFromToken(token);
+		}
+		catch(Exception e) {
+			response.sendError(400, e.getMessage());
+			return;
+		}
 
 		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-			if (jwtTokenUtil.tokenValido(token)) {
-				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-						userDetails, null, userDetails.getAuthorities());
-				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-				SecurityContextHolder.getContext().setAuthentication(authentication);
+			try {
+				if (jwtTokenUtil.tokenValido(token)) {
+					UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+							userDetails, null, userDetails.getAuthorities());
+					authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+					SecurityContextHolder.getContext().setAuthentication(authentication);
+				}
 			}
+			catch(Exception e) {
+				response.sendError(400, e.getMessage());
+				return;
+			}
+			
 		}
+		
+		if(username != null) {
+			request.setAttribute("codigo_porta", username);
+		}		
 
 		chain.doFilter(request, response);
 	}
