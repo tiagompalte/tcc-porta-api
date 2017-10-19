@@ -37,8 +37,8 @@ import br.com.utfpr.porta.util.Criptografia;
 public class AutenticacaoControle {
 	
 	private static final Logger log = LoggerFactory.getLogger(AutenticacaoControle.class);
-	private static final String TOKEN_HEADER = "Authorization";
-	private static final String BEARER_PREFIX = "Bearer ";
+	private static final String TOKEN_HEADER = "authorization";
+	private static final String BEARER_PREFIX = "Bearer";
 	private static final String CHAVE = "AzSJFHSJFBSJFHSJ";
 
 	@Autowired
@@ -109,21 +109,36 @@ public class AutenticacaoControle {
 		Optional<String> token = Optional.ofNullable(request.getHeader(TOKEN_HEADER));
 
 		if (token.isPresent() && token.get().startsWith(BEARER_PREFIX)) {
-			token = Optional.of(token.get().substring(7));
+			token = Optional.of(token.get().substring(BEARER_PREFIX.length() + 1));
 		}
 
 		if (!token.isPresent()) {
 			response.getErrors().add("Token não informado.");
-		} else if (!jwtTokenUtil.tokenValido(token.get())) {
-			response.getErrors().add("Token inválido ou expirado.");
+		} 
+		
+		try {
+			if (!jwtTokenUtil.tokenValido(token.get())) {
+				response.getErrors().add("Token inválido ou expirado.");
+			}
 		}
+		catch(Exception e) {
+			response.addError("Token inválido");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		
 
 		if (!response.getErrors().isEmpty()) {
 			return ResponseEntity.badRequest().body(response);
 		}
 
-		String refreshedToken = jwtTokenUtil.refreshToken(token.get());
-		response.setData(new TokenDto(refreshedToken));
+		try {
+			String refreshedToken = jwtTokenUtil.refreshToken(token.get());
+			response.setData(new TokenDto(refreshedToken));
+		}
+		catch(Exception e) {
+			response.addError(e.getMessage());
+			return ResponseEntity.badRequest().body(response);
+		}
 
 		return ResponseEntity.ok(response);
 	}

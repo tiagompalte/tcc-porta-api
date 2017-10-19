@@ -27,13 +27,13 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return String
 	 */
-	public String getUsernameFromToken(String token) {
+	public String getUsernameFromToken(String token) throws Exception {
 		String username;
 		try {
 			Claims claims = getClaimsFromToken(token);
 			username = claims.getSubject();
 		} catch (Exception e) {
-			username = null;
+			throw new Exception("Erro ao obter código da porta. ".concat(e.getMessage()));
 		}
 		return username;
 	}
@@ -44,15 +44,9 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return Date
 	 */
-	public Date getExpirationDateFromToken(String token) {
-		Date expiration;
-		try {
-			Claims claims = getClaimsFromToken(token);
-			expiration = claims.getExpiration();
-		} catch (Exception e) {
-			expiration = null;
-		}
-		return expiration;
+	public Date getExpirationDateFromToken(String token) throws Exception {
+		Claims claims = getClaimsFromToken(token);
+		return claims.getExpiration();
 	}
 
 	/**
@@ -61,14 +55,14 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return String
 	 */
-	public String refreshToken(String token) {
+	public String refreshToken(String token) throws Exception{
 		String refreshedToken;
 		try {
 			Claims claims = getClaimsFromToken(token);
 			claims.put(CLAIM_KEY_CREATED, new Date());
 			refreshedToken = gerarToken(claims);
 		} catch (Exception e) {
-			refreshedToken = null;
+			throw new Exception("Erro ao realizar refresh no token. ".concat(e.getMessage()));
 		}
 		return refreshedToken;
 	}
@@ -79,7 +73,7 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return boolean
 	 */
-	public boolean tokenValido(String token) {
+	public boolean tokenValido(String token) throws Exception {
 		return !tokenExpirado(token);
 	}
 
@@ -94,7 +88,6 @@ public class JwtTokenUtil {
 		claims.put(CLAIM_KEY_USERNAME, userDetails.getUsername());
 		userDetails.getAuthorities().forEach(authority -> claims.put(CLAIM_KEY_ROLE, authority.getAuthority()));
 		claims.put(CLAIM_KEY_CREATED, new Date());
-
 		return gerarToken(claims);
 	}
 
@@ -105,12 +98,12 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return Claims
 	 */
-	private Claims getClaimsFromToken(String token) {
+	private Claims getClaimsFromToken(String token) throws Exception {
 		Claims claims;
 		try {
 			claims = Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token).getBody();
 		} catch (Exception e) {
-			claims = null;
+			throw new Exception("Erro ao realizar o parse do token JWT. ".concat(e.getMessage()));
 		}
 		return claims;
 	}
@@ -130,11 +123,8 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return boolean
 	 */
-	private boolean tokenExpirado(String token) {
+	private boolean tokenExpirado(String token) throws Exception {
 		Date dataExpiracao = this.getExpirationDateFromToken(token);
-		if (dataExpiracao == null) {
-			return false;
-		}
 		return dataExpiracao.before(new Date());
 	}
 

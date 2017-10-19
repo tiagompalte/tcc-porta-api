@@ -9,6 +9,7 @@ public class Response<T> {
 	private List<String> errors;
 
 	public Response() {
+		errors = new ArrayList<>();
 	}
 
 	public T getData() {
@@ -28,9 +29,6 @@ public class Response<T> {
 	}
 	
 	public void addError(String error) {
-		if(errors == null) {
-			errors = new ArrayList<>();
-		}
 		errors.add(error);
 	}
 
