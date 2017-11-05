@@ -8,6 +8,7 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 import br.com.utfpr.porta.config.JPAConfig;
+import br.com.utfpr.porta.config.S3Config;
 import br.com.utfpr.porta.config.SecurityConfig;
 import br.com.utfpr.porta.config.ServiceConfig;
 import br.com.utfpr.porta.config.WebConfig;
@@ -16,7 +17,7 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
 	
 	@Override
 	protected Class<?>[] getRootConfigClasses() {
-		return new Class<?>[] { JPAConfig.class, ServiceConfig.class, SecurityConfig.class };
+		return new Class<?>[] { JPAConfig.class, ServiceConfig.class, SecurityConfig.class, S3Config.class };
 	}
 
 	@Override

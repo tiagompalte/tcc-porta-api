@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>br.com.utfpr</groupId>
   <artifactId>porta-api</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <packaging>war</packaging>
   <name>porta-api</name>
   <description>API do projeto de TCC</description>
@@ -34,14 +34,14 @@
 		<jsonwebtoken.version>0.7.0</jsonwebtoken.version>
 		
 		<!-- Porta Serviço -->
-		<portaservico.version>1.0.1</portaservico.version>
+		<portaservico.version>1.0.2</portaservico.version>
 		
 		<!-- Apache Commons DBCP -->
 		<commons-dbcp2.version>2.1.1</commons-dbcp2.version>
 		
 		<!-- MySQL Connector -->
 		<mysql-connector-java.version>5.1.39</mysql-connector-java.version>
-		
+				
 	</properties>
 	
 	<build>
