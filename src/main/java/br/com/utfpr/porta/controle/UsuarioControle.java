@@ -2,16 +2,19 @@ package br.com.utfpr.porta.controle;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,9 +29,11 @@ import br.com.utfpr.porta.repositorio.Portas;
 import br.com.utfpr.porta.repositorio.Usuarios;
 import br.com.utfpr.porta.response.Response;
 import br.com.utfpr.porta.seguranca.dto.AutenticacaoSenhaDto;
-import br.com.utfpr.porta.seguranca.dto.TokenDto;
+import br.com.utfpr.porta.seguranca.dto.ErroDto;
+import br.com.utfpr.porta.seguranca.dto.MensagemDto;
 import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
+import br.com.utfpr.porta.storage.AudioStorage;
 
 @Controller
 @RequestMapping("/api/usuarios")
@@ -45,28 +50,32 @@ public class UsuarioControle {
 	
 	@Autowired
 	private Usuarios usuariosRepositorio;
+	
+	@Autowired
+	private AudioStorage audioStorage;
 		
 	@RequestMapping(value="/rfid/{rfid}", method=RequestMethod.GET)
 	public ResponseEntity<?> obterUsuarioPorRFID(
 			@RequestHeader(value="zone") String zone, @PathVariable String rfid,
 			HttpServletRequest request, HttpServletResponse response) {
 		
-		Response<TokenDto> responseBody = new Response<TokenDto>();
+		Response<ErroDto> responseErro = new Response<ErroDto>();
+		ErroDto erro = new ErroDto();
 				
 		if(StringUtils.isEmpty(rfid)) {
-			responseBody.addError("RFID não informado");
+			erro.addError("RFID não informado");
 		}
 		
 		Long codigo_porta = null;
 		if(request.getAttribute("codigo_porta") == null) {
-			responseBody.addError("Código da porta não informado");
+			erro.addError("Código da porta não informado");
 		}
 		else {
 			codigo_porta = Long.parseLong(request.getAttribute("codigo_porta").toString());
 		}
 		
 		if(Strings.isEmpty(zone)) {
-			responseBody.addError("Zona local não informada");
+			erro.addError("Zona local não informada");
 		}
 		
 		LocalDateTime dataHora;		
@@ -74,25 +83,32 @@ public class UsuarioControle {
 			dataHora = LocalDateTime.now(ZoneId.of(zone));
 		}
 		catch(Exception e) {
-			responseBody.addError("Zona local formatada incorretamente");
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+			erro.addError("Zona local formatada incorretamente");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);
 		}
 		
-		Usuario usuario = usuariosRepositorio.findByRfid(rfid);
+		Optional<Usuario> usuario = usuariosRepositorio.findByRfid(rfid);
 		
 		Porta porta = portasRepositorio.findOne(codigo_porta);
 		
-		if(usuario == null || porta == null) {
-			responseBody.addError("Usuário e/ou porta não encontrado");
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
+		if(!usuario.isPresent() || porta == null) {
+			erro.addError("Usuário e/ou porta não encontrado");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);
 		}
 		
-		if(!autorizacaoServico.validarAcessoUsuario(porta, usuario, dataHora)) {
-			responseBody.addError("Usuário sem autorização para acesso a porta desejada");
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseBody);
+		if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
+			erro.addError("Usuário sem autorização para acesso a porta desejada");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseErro);
 		}
-				
-		return ResponseEntity.status(HttpStatus.OK).body(usuario);			
+		
+		if(!StringUtils.isEmpty(usuario.get().getNomeAudio())) {
+			usuario.get().setAudio(Base64.encodeBase64String(audioStorage.recuperar(usuario.get().getNomeAudio())));
+		}
+						
+		return ResponseEntity.status(HttpStatus.OK).body(usuario.get());			
 	}
 	
 	@RequestMapping(value="/autenticacaoSenha", method=RequestMethod.POST)
@@ -100,22 +116,24 @@ public class UsuarioControle {
 			HttpServletRequest request, HttpServletResponse response,
 			@Valid @RequestBody AutenticacaoSenhaDto autenticacaoSenha) {
 		
-		Response<TokenDto> responseBody = new Response<TokenDto>();
+		Response<ErroDto> responseErro = new Response<ErroDto>();
+		ErroDto erro = new ErroDto();
 						
 		Long codigo_porta = null;
 		if(request.getAttribute("codigo_porta") == null) {
-			responseBody.addError("Código da porta não informado");
+			erro.addError("Código da porta não informado");
 		}
 		else {
 			codigo_porta = Long.parseLong(request.getAttribute("codigo_porta").toString());
 		}
 		
 		if(Strings.isEmpty(zone)) {
-			responseBody.addError("Zona local não informada");
+			erro.addError("Zona local não informada");
 		}
 		
-		if(responseBody.getErrors() != null && !responseBody.getErrors().isEmpty()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);			
+		if(erro.getErrors() != null && !erro.getErrors().isEmpty()) {
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);			
 		}
 		
 		LocalDateTime dataHora;		
@@ -123,34 +141,41 @@ public class UsuarioControle {
 			dataHora = LocalDateTime.now(ZoneId.of(zone));
 		}
 		catch(Exception e) {
-			responseBody.addError("Zona local formatada incorretamente");
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+			erro.addError("Zona local formatada incorretamente");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);
 		}
 		
-		Usuario usuario = usuariosRepositorio.findByRfid(autenticacaoSenha.getRfid());
+		Optional<Usuario> usuario = usuariosRepositorio.findByRfid(autenticacaoSenha.getRfid());
 		
 		Porta porta = portasRepositorio.findOne(codigo_porta);
 		
-		if(usuario == null || porta == null) {
-			responseBody.addError("Usuário e/ou porta não encontrado");
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
+		if(!usuario.isPresent() || porta == null) {
+			erro.addError("Usuário e/ou porta não encontrado");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);
 		}
 		
-		if(!autorizacaoServico.validarAcessoUsuario(porta, usuario, dataHora)) {
-			responseBody.addError("Usuário sem autorização para acesso a porta desejada");
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseBody);
+		if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
+			erro.addError("Usuário sem autorização para acesso a porta desejada");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseErro);
 		}
 		
-		if(!BCrypt.checkpw(autenticacaoSenha.getSenha(), usuario.getSenha())) {
-			responseBody.addError("Senha incorreta");
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
+		PasswordEncoder pass = new BCryptPasswordEncoder();
+		
+		if(pass.matches(autenticacaoSenha.getSenha(), usuario.get().getSenha()) == false) {
+			erro.addError("Senha incorreta");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
 						
-		logServico.entrarPorta(usuario, porta, dataHora, "digitada");
+		logServico.entrarPorta(usuario.get(), porta, dataHora, "digitada");
 		
-		responseBody.setData(new TokenDto("Autorizado"));
+		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
+		responseMensagem.setData(new MensagemDto("Autorizado"));
 				
-		return ResponseEntity.ok(responseBody);			
+		return ResponseEntity.ok(responseMensagem);			
 	}
 	
 	@RequestMapping(value="/confirmacaoAcesso/{rfid}", method=RequestMethod.POST)
@@ -158,10 +183,11 @@ public class UsuarioControle {
 			@RequestHeader(value="zone") String zone, @PathVariable String rfid, 
 			HttpServletRequest request, HttpServletResponse response) {
 		
-		Response<TokenDto> responseBody = new Response<TokenDto>();
+		Response<ErroDto> responseErro = new Response<ErroDto>();
+		ErroDto erro = new ErroDto();
 		
 		if(Strings.isEmpty(zone)) {
-			responseBody.addError("Zona local não informada");
+			erro.addError("Zona local não informada");
 		}
 		
 		LocalDateTime dataHora;		
@@ -169,32 +195,35 @@ public class UsuarioControle {
 			dataHora = LocalDateTime.now(ZoneId.of(zone));
 		}
 		catch(Exception e) {
-			responseBody.addError("Zona local formatada incorretamente");
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+			erro.addError("Zona local formatada incorretamente");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);
 		}
 						
 		Long codigo_porta = null;
 		if(request.getAttribute("codigo_porta") == null) {
-			responseBody.addError("Código da porta não informado");
+			erro.addError("Código da porta não informado");
 		}
 		else {
 			codigo_porta = Long.parseLong(request.getAttribute("codigo_porta").toString());
 		}
 						
-		Usuario usuario = usuariosRepositorio.findByRfid(rfid);
+		Optional<Usuario> usuario = usuariosRepositorio.findByRfid(rfid);
 		
 		Porta porta = portasRepositorio.findOne(codigo_porta);
 		
-		if(usuario == null || porta == null) {
-			responseBody.addError("Usuário e/ou porta não encontrado");
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
+		if(!usuario.isPresent() || porta == null) {
+			erro.addError("Usuário e/ou porta não encontrado");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);
 		}
 		
-		logServico.entrarPorta(usuario, porta, dataHora, "falada");
+		logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
 		
-		responseBody.setData(new TokenDto("Log registrado"));
+		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
+		responseMensagem.setData(new MensagemDto("Log registrado"));
 		
-		return ResponseEntity.ok(responseBody);
+		return ResponseEntity.ok(responseMensagem);
 	}
 	
 

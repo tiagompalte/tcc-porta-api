@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import br.com.utfpr.porta.response.Response;
+import br.com.utfpr.porta.seguranca.dto.ErroDto;
 import br.com.utfpr.porta.seguranca.dto.JwtAuthenticationDto;
 import br.com.utfpr.porta.seguranca.dto.TokenDto;
 import br.com.utfpr.porta.seguranca.util.JwtTokenUtil;
@@ -36,7 +37,7 @@ import br.com.utfpr.porta.util.Criptografia;
 @CrossOrigin(origins = "*")
 public class AutenticacaoControle {
 	
-	private static final Logger log = LoggerFactory.getLogger(AutenticacaoControle.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(AutenticacaoControle.class);
 	private static final String TOKEN_HEADER = "authorization";
 	private static final String BEARER_PREFIX = "Bearer";
 	private static final String CHAVE = "AzSJFHSJFBSJFHSJ";
@@ -55,92 +56,102 @@ public class AutenticacaoControle {
 	 * 
 	 * @param authenticationDto
 	 * @param result
-	 * @return ResponseEntity<Response<TokenDto>>
+	 * @return ResponseEntity<Response<?>>
 	 * @throws AuthenticationException
 	 */
 	@PostMapping
-	public ResponseEntity<Response<TokenDto>> gerarTokenJwt(@Valid @RequestBody JwtAuthenticationDto authenticationDto,
+	public ResponseEntity<Response<?>> gerarTokenJwt(@Valid @RequestBody JwtAuthenticationDto authenticationDto,
 			BindingResult result) throws AuthenticationException {
 		
-		Response<TokenDto> response = new Response<TokenDto>();
+		Response<ErroDto> responseErro = new Response<ErroDto>();
+		ErroDto erro = new ErroDto();
 
 		if (result.hasErrors()) {
-			log.error("Erro validando lançamento: {}", result.getAllErrors());
-			result.getAllErrors().forEach(error -> response.getErrors().add(error.getDefaultMessage()));
-			return ResponseEntity.badRequest().body(response);
+			LOGGER.error("Erro validando lançamento: {}", result.getAllErrors());
+			result.getAllErrors().forEach(error -> erro.addError(error.getDefaultMessage()));
+			responseErro.setData(erro);
+			return ResponseEntity.badRequest().body(responseErro);
 		}
 		
 		try {
 			authenticationDto.setSenha(Criptografia.decode(authenticationDto.getSenha(), CHAVE));
 		}
-		catch(Exception e) {
-			response.setErrors(Arrays.asList(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		catch(Exception e) {			
+			erro.setErrors(Arrays.asList(e.getMessage()));
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
 				
 		try {			
-			log.info("Gerando token para a porta de código {}.", authenticationDto.getCodigo());
+			LOGGER.info("Gerando token para a porta de código {}.", authenticationDto.getCodigo());
 			Authentication authentication = authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(authenticationDto.getCodigo(), authenticationDto.getSenha()));
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 		catch(Exception e) {
-			response.setErrors(Arrays.asList(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+			erro.addError(e.getMessage());
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
 
 		UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationDto.getCodigo());
 		String token = jwtTokenUtil.obterToken(userDetails);
-		response.setData(new TokenDto(token));
-
-		return ResponseEntity.ok(response);
+		
+		Response<TokenDto> responseToken = new Response<TokenDto>();
+		responseToken.setData(new TokenDto(token));
+		return ResponseEntity.ok(responseToken);
 	}
 
 	/**
 	 * Gera um novo token com uma nova data de expiração.
 	 * 
 	 * @param request
-	 * @return ResponseEntity<Response<TokenDto>>
+	 * @return ResponseEntity<Response<?>>
 	 */
 	@PostMapping(value = "/refresh")
-	public ResponseEntity<Response<TokenDto>> gerarRefreshTokenJwt(HttpServletRequest request) {
-		log.info("Gerando refresh token JWT.");
-		Response<TokenDto> response = new Response<TokenDto>();
+	public ResponseEntity<Response<?>> gerarRefreshTokenJwt(HttpServletRequest request) {
+		
+		Response<ErroDto> responseErro = new Response<ErroDto>();
+		ErroDto erro = new ErroDto();
 		Optional<String> token = Optional.ofNullable(request.getHeader(TOKEN_HEADER));
 
 		if (token.isPresent() && token.get().startsWith(BEARER_PREFIX)) {
 			token = Optional.of(token.get().substring(BEARER_PREFIX.length() + 1));
 		}
 
-		if (!token.isPresent()) {
-			response.getErrors().add("Token não informado.");
+		if (!token.isPresent()) {			
+			erro.addError("Token não informado.");
 		} 
 		
 		try {
 			if (!jwtTokenUtil.tokenValido(token.get())) {
-				response.getErrors().add("Token inválido ou expirado.");
+				erro.addError("Token inválido ou expirado.");
 			}
 		}
 		catch(Exception e) {
-			response.addError("Token inválido");
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+			erro.addError("Token inválido");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);
 		}
 		
 
-		if (!response.getErrors().isEmpty()) {
-			return ResponseEntity.badRequest().body(response);
+		if (!erro.getErrors().isEmpty()) {
+			responseErro.setData(erro);
+			return ResponseEntity.badRequest().body(responseErro);
 		}
 
+		Response<TokenDto> responseToken = new Response<TokenDto>();
 		try {
 			String refreshedToken = jwtTokenUtil.refreshToken(token.get());
-			response.setData(new TokenDto(refreshedToken));
+			responseToken.setData(new TokenDto(refreshedToken));
 		}
 		catch(Exception e) {
-			response.addError(e.getMessage());
-			return ResponseEntity.badRequest().body(response);
+			erro.addError(e.getMessage());
+			responseErro.setData(erro);
+			return ResponseEntity.badRequest().body(responseErro);
 		}
 
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(responseToken);
 	}
 
 }
