@@ -107,8 +107,11 @@ public class UsuarioControle {
 		if(!StringUtils.isEmpty(usuario.get().getNomeAudio())) {
 			usuario.get().setAudio(Base64.encodeBase64String(audioStorage.recuperar(usuario.get().getNomeAudio())));
 		}
+		
+		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
+		responseMensagem.setData(new MensagemDto(usuario.get().getAudio()));
 						
-		return ResponseEntity.status(HttpStatus.OK).body(usuario.get());			
+		return ResponseEntity.ok().body(responseMensagem);			
 	}
 	
 	@RequestMapping(value="/autenticacaoSenha", method=RequestMethod.POST)
