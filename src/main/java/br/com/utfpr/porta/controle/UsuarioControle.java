@@ -167,7 +167,7 @@ public class UsuarioControle {
 		
 		PasswordEncoder pass = new BCryptPasswordEncoder();
 		
-		if(pass.matches(autenticacaoSenha.getSenha(), usuario.get().getSenha()) == false) {
+		if(pass.matches(autenticacaoSenha.getSenha(), usuario.get().getSenhaTeclado()) == false) {
 			erro.addError("Senha incorreta");
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
