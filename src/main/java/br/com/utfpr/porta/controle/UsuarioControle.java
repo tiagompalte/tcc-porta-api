@@ -33,6 +33,7 @@ import br.com.utfpr.porta.seguranca.dto.ErroDto;
 import br.com.utfpr.porta.seguranca.dto.MensagemDto;
 import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
+import br.com.utfpr.porta.servico.UsuarioServico;
 import br.com.utfpr.porta.storage.AudioStorage;
 
 @Controller
@@ -50,6 +51,9 @@ public class UsuarioControle {
 	
 	@Autowired
 	private Usuarios usuariosRepositorio;
+	
+	@Autowired
+	private UsuarioServico usuarioServico;
 	
 	@Autowired
 	private AudioStorage audioStorage;
@@ -78,6 +82,11 @@ public class UsuarioControle {
 			erro.addError("Zona local não informada");
 		}
 		
+		if(erro.getErrors() != null && erro.getErrors().isEmpty() == false) {
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);
+		}
+		
 		LocalDateTime dataHora;		
 		try {
 			dataHora = LocalDateTime.now(ZoneId.of(zone));
@@ -98,14 +107,32 @@ public class UsuarioControle {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);
 		}
 		
+		if(usuario.get().getAtivo() == false) {
+			erro.addError("Usuário inativo");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseErro);
+		}
+		
+		if(StringUtils.isEmpty(usuario.get().getNomeAudio())) {
+			erro.addError("Usuário sem áudio cadastrado");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);
+		}
+		
 		if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
 			erro.addError("Usuário sem autorização para acesso a porta desejada");
 			responseErro.setData(erro);
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseErro);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
 		
-		if(!StringUtils.isEmpty(usuario.get().getNomeAudio())) {
-			usuario.get().setAudio(Base64.encodeBase64String(audioStorage.recuperar(usuario.get().getNomeAudio())));
+		try {			
+			if(!StringUtils.isEmpty(usuario.get().getNomeAudio())) {
+				usuario.get().setAudio(Base64.encodeBase64String(audioStorage.recuperar(usuario.get().getNomeAudio())));
+			}
+		} catch(Exception e) {
+			erro.addError("Erro ao codificar o áudio. ".concat(e.getMessage()));
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
 		
 		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
@@ -152,23 +179,29 @@ public class UsuarioControle {
 		Optional<Usuario> usuario = usuariosRepositorio.findByRfid(autenticacaoSenha.getRfid());
 		
 		Porta porta = portasRepositorio.findOne(codigo_porta);
-		
+			
 		if(!usuario.isPresent() || porta == null) {
 			erro.addError("Usuário e/ou porta não encontrado");
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);
 		}
+		if(usuario.get().getAtivo() == false) {
+			erro.addError("Usuário inativo");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseErro);
+		}
 		
 		if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
 			erro.addError("Usuário sem autorização para acesso a porta desejada");
 			responseErro.setData(erro);
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseErro);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
 		
 		PasswordEncoder pass = new BCryptPasswordEncoder();
 		
 		if(pass.matches(autenticacaoSenha.getSenha(), usuario.get().getSenhaTeclado()) == false) {
-			erro.addError("Senha incorreta");
+			String retorno = usuarioServico.incrementarNrTentativaAcessoPorta(usuario.get().getCodigo());
+			erro.addError("Senha incorreta".concat(retorno != null ? retorno : ""));
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
@@ -221,6 +254,17 @@ public class UsuarioControle {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);
 		}
 		
+		if(usuario.get().getAtivo() == false) {
+			erro.addError("Usuário inativo");
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseErro);
+		}
+		
+		if(usuario.get().getNrTentativaAcessoPorta() != null && usuario.get().getNrTentativaAcessoPorta() > 0) {
+			usuario.get().setNrTentativaAcessoPorta(0);
+			usuarioServico.salvar(usuario.get());
+		}
+		
 		logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
 		
 		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
@@ -228,6 +272,6 @@ public class UsuarioControle {
 		
 		return ResponseEntity.ok(responseMensagem);
 	}
-	
+		
 
 }

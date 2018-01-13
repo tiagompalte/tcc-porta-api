@@ -1,6 +1,5 @@
 package br.com.utfpr.porta.controle;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,7 +29,6 @@ import br.com.utfpr.porta.seguranca.dto.ErroDto;
 import br.com.utfpr.porta.seguranca.dto.JwtAuthenticationDto;
 import br.com.utfpr.porta.seguranca.dto.TokenDto;
 import br.com.utfpr.porta.seguranca.util.JwtTokenUtil;
-import br.com.utfpr.porta.util.Criptografia;
 
 @Controller
 @RequestMapping("/token")
@@ -40,7 +38,7 @@ public class AutenticacaoControle {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AutenticacaoControle.class);
 	private static final String TOKEN_HEADER = "authorization";
 	private static final String BEARER_PREFIX = "Bearer";
-	private static final String CHAVE = "AzSJFHSJFBSJFHSJ";
+	//private static final String CHAVE = "AzSJFHSJFBSJFHSJ";
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
@@ -73,14 +71,14 @@ public class AutenticacaoControle {
 			return ResponseEntity.badRequest().body(responseErro);
 		}
 		
-		try {
-			authenticationDto.setSenha(Criptografia.decode(authenticationDto.getSenha(), CHAVE));
-		}
-		catch(Exception e) {			
-			erro.setErrors(Arrays.asList(e.getMessage()));
-			responseErro.setData(erro);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
-		}
+//		try {
+//			authenticationDto.setSenha(Criptografia.decode(authenticationDto.getSenha(), CHAVE));
+//		}
+//		catch(Exception e) {			
+//			erro.setErrors(Arrays.asList(e.getMessage()));
+//			responseErro.setData(erro);
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
+//		}
 				
 		try {			
 			LOGGER.info("Gerando token para a porta de código {}.", authenticationDto.getCodigo());
@@ -133,7 +131,6 @@ public class AutenticacaoControle {
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);
 		}
-		
 
 		if (!erro.getErrors().isEmpty()) {
 			responseErro.setData(erro);
