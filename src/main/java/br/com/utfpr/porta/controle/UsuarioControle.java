@@ -1,5 +1,6 @@
 package br.com.utfpr.porta.controle;
 
+import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
@@ -8,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import br.com.utfpr.porta.codec.G711;
 import br.com.utfpr.porta.modelo.Porta;
 import br.com.utfpr.porta.modelo.Usuario;
 import br.com.utfpr.porta.repositorio.Portas;
@@ -127,7 +128,15 @@ public class UsuarioControle {
 		
 		try {			
 			if(!StringUtils.isEmpty(usuario.get().getNomeAudio())) {
-				usuario.get().setAudio(Base64.encodeBase64String(audioStorage.recuperar(usuario.get().getNomeAudio())));
+				
+				byte[] sound = audioStorage.recuperar(usuario.get().getNomeAudio());
+								
+				int sound_int = ByteBuffer.wrap(sound).getInt();
+				
+				int alaw = G711.linear2alaw(sound_int);				
+				
+				usuario.get().setAudio(String.valueOf(alaw));
+				
 			}
 		} catch(Exception e) {
 			erro.addError("Erro ao codificar o áudio. ".concat(e.getMessage()));
