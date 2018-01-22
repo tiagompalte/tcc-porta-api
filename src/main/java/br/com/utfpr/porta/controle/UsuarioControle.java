@@ -1,6 +1,5 @@
 package br.com.utfpr.porta.controle;
 
-import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
@@ -9,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import br.com.utfpr.porta.codec.G711;
 import br.com.utfpr.porta.modelo.Porta;
 import br.com.utfpr.porta.modelo.Usuario;
 import br.com.utfpr.porta.repositorio.Portas;
@@ -36,6 +35,8 @@ import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
 import br.com.utfpr.porta.servico.UsuarioServico;
 import br.com.utfpr.porta.storage.AudioStorage;
+import br.com.utfpr.porta.util.Conversao;
+import br.com.utfpr.porta.util.Hash;
 
 @Controller
 @RequestMapping("/api/usuarios")
@@ -130,22 +131,28 @@ public class UsuarioControle {
 			if(!StringUtils.isEmpty(usuario.get().getNomeAudio())) {
 				
 				byte[] sound = audioStorage.recuperar(usuario.get().getNomeAudio());
-								
-				int sound_int = ByteBuffer.wrap(sound).getInt();
+																
+				byte[] alaw = Conversao.convertWavToAlaw(sound);
 				
-				int alaw = G711.linear2alaw(sound_int);				
-				
-				usuario.get().setAudio(String.valueOf(alaw));
-				
+				usuario.get().setAudio(Base64.encodeBase64String(alaw));
+												
 			}
 		} catch(Exception e) {
 			erro.addError("Erro ao codificar o áudio. ".concat(e.getMessage()));
+			responseErro.setData(erro);		
+		}
+		
+		String hash;
+		try {
+			hash = Hash.MD5(usuario.get().getAudio());
+		} catch(Exception e) {
+			erro.addError("Erro ao gerar hash da mensagem. ".concat(e.getMessage()));
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
-		
+				
 		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
-		responseMensagem.setData(new MensagemDto(usuario.get().getAudio()));
+		responseMensagem.setData(new MensagemDto(usuario.get().getAudio(), hash));
 						
 		return ResponseEntity.ok().body(responseMensagem);			
 	}
@@ -282,5 +289,4 @@ public class UsuarioControle {
 		return ResponseEntity.ok(responseMensagem);
 	}
 		
-
 }
