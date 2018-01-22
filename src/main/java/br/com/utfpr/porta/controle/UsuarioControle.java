@@ -35,6 +35,8 @@ import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
 import br.com.utfpr.porta.servico.UsuarioServico;
 import br.com.utfpr.porta.storage.AudioStorage;
+import br.com.utfpr.porta.util.Conversao;
+import br.com.utfpr.porta.util.Hash;
 
 @Controller
 @RequestMapping("/api/usuarios")
@@ -127,16 +129,30 @@ public class UsuarioControle {
 		
 		try {			
 			if(!StringUtils.isEmpty(usuario.get().getNomeAudio())) {
-				usuario.get().setAudio(Base64.encodeBase64String(audioStorage.recuperar(usuario.get().getNomeAudio())));
+				
+				byte[] sound = audioStorage.recuperar(usuario.get().getNomeAudio());
+																
+				byte[] alaw = Conversao.convertWavToAlaw(sound);
+				
+				usuario.get().setAudio(Base64.encodeBase64String(alaw));
+												
 			}
 		} catch(Exception e) {
 			erro.addError("Erro ao codificar o áudio. ".concat(e.getMessage()));
+			responseErro.setData(erro);		
+		}
+		
+		String hash;
+		try {
+			hash = Hash.MD5(usuario.get().getAudio());
+		} catch(Exception e) {
+			erro.addError("Erro ao gerar hash da mensagem. ".concat(e.getMessage()));
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
-		
+				
 		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
-		responseMensagem.setData(new MensagemDto(usuario.get().getAudio()));
+		responseMensagem.setData(new MensagemDto(usuario.get().getAudio(), hash));
 						
 		return ResponseEntity.ok().body(responseMensagem);			
 	}
@@ -273,5 +289,4 @@ public class UsuarioControle {
 		return ResponseEntity.ok(responseMensagem);
 	}
 		
-
 }
