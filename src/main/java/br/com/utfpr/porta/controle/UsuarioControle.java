@@ -16,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -68,7 +67,7 @@ public class UsuarioControle {
 		Response<ErroDto> responseErro = new Response<ErroDto>();
 		ErroDto erro = new ErroDto();
 				
-		if(StringUtils.isEmpty(rfid)) {
+		if(Strings.isEmpty(rfid)) {
 			erro.addError("RFID não informado");
 		}
 		
@@ -115,7 +114,7 @@ public class UsuarioControle {
 			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseErro);
 		}
 		
-		if(StringUtils.isEmpty(usuario.get().getNomeAudio())) {
+		if(Strings.isEmpty(usuario.get().getNomeAudio())) {
 			erro.addError("Usuário sem áudio cadastrado");
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);
@@ -128,7 +127,7 @@ public class UsuarioControle {
 		}
 		
 		try {			
-			if(!StringUtils.isEmpty(usuario.get().getNomeAudio())) {
+			if(!Strings.isEmpty(usuario.get().getNomeAudio())) {
 				
 				byte[] sound = audioStorage.recuperar(usuario.get().getNomeAudio());
 																
@@ -152,7 +151,8 @@ public class UsuarioControle {
 		}
 				
 		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
-		responseMensagem.setData(new MensagemDto(usuario.get().getAudio(), hash));
+		//responseMensagem.setData(new MensagemDto(usuario.get().getAudio(), hash));
+		responseMensagem.setData(new MensagemDto(hash));
 						
 		return ResponseEntity.ok().body(responseMensagem);			
 	}
