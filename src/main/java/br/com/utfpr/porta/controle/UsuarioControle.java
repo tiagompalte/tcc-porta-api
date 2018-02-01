@@ -139,6 +139,7 @@ public class UsuarioControle {
 		} catch(Exception e) {
 			erro.addError("Erro ao codificar o áudio. ".concat(e.getMessage()));
 			responseErro.setData(erro);		
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
 		
 		String hash;
@@ -152,7 +153,7 @@ public class UsuarioControle {
 				
 		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
 		//responseMensagem.setData(new MensagemDto(usuario.get().getAudio(), hash));
-		responseMensagem.setData(new MensagemDto(hash));
+		responseMensagem.setData(new MensagemDto(null, hash));
 						
 		return ResponseEntity.ok().body(responseMensagem);			
 	}
