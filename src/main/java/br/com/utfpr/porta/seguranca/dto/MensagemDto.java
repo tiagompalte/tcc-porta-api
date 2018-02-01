@@ -3,20 +3,20 @@ package br.com.utfpr.porta.seguranca.dto;
 public class MensagemDto {
 		
 	private String hash;
-//	private String mensagem;
-//	
-//	public MensagemDto(String mensagem) {
-//		super();
-//		this.mensagem = mensagem;
-//	}
+	//private String mensagem;
 	
-//	public MensagemDto(String mensagem, String hash) {
-//		super();
+//	public MensagemDto(String mensagem) {
 //		this.mensagem = mensagem;
-//		this.hash = hash;
 //	}
 	
 	public MensagemDto(String hash) {
+		super();
+		this.hash = hash;
+	}
+	
+	public MensagemDto(String mensagem, String hash) {
+		super();
+		//this.mensagem = mensagem;
 		this.hash = hash;
 	}
 

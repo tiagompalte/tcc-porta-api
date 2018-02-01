@@ -38,8 +38,12 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 			token = token.substring(BEARER_PREFIX.length() + 1);
 		}
 		
-		if(token.isEmpty()) {
-			response.sendError(400, "Token não informado");
+		if(token == null || token.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.setContentType("application/json");
+			response.getWriter().write("{\"cod\": 400}");
+			response.getWriter().flush();
+			response.getWriter().close();
 			return;
 		}
 		
@@ -48,7 +52,11 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 			username = jwtTokenUtil.getUsernameFromToken(token);
 		}
 		catch(Exception e) {
-			response.sendError(400, e.getMessage());
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.setContentType("application/json");
+			response.getWriter().write("{\"cod\": 401}");
+			response.getWriter().flush();
+			response.getWriter().close();
 			return;
 		}
 
@@ -64,7 +72,11 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 				}
 			}
 			catch(Exception e) {
-				response.sendError(400, e.getMessage());
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				response.setContentType("application/json");
+				response.getWriter().write("{\"cod\": 401}");
+				response.getWriter().flush();
+				response.getWriter().close();
 				return;
 			}
 			

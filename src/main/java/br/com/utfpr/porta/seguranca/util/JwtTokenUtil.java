@@ -19,7 +19,7 @@ public class JwtTokenUtil {
 	private static final String CLAIM_KEY_CREATED = "created";
 
 	private static final String SECRET = "4_@Q&9tZ&Ly?Fjn0>>Z6(077`KGluC";
-	private static final Long EXPIRATION = 604800L;
+	private static final Long EXPIRATION = 86400L; //Um dia = 60 x 60 x 24
 
 	/**
 	 * Obtém o username (email) contido no token JWT.
