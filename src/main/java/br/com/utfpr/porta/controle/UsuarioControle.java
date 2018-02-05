@@ -29,6 +29,7 @@ import br.com.utfpr.porta.repositorio.Usuarios;
 import br.com.utfpr.porta.response.Response;
 import br.com.utfpr.porta.seguranca.dto.AutenticacaoSenhaDto;
 import br.com.utfpr.porta.seguranca.dto.ErroDto;
+import br.com.utfpr.porta.seguranca.dto.UsuarioDto;
 import br.com.utfpr.porta.seguranca.dto.MensagemDto;
 import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
@@ -126,6 +127,7 @@ public class UsuarioControle {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
 		
+		String audio = null;
 		try {			
 			if(!Strings.isEmpty(usuario.get().getNomeAudio())) {
 				
@@ -133,8 +135,11 @@ public class UsuarioControle {
 																
 				byte[] alaw = Conversao.convertWavToAlaw(sound);
 				
-				usuario.get().setAudio(Base64.encodeBase64String(alaw));
+				audio = Base64.encodeBase64String(alaw);
 												
+			}
+			else {
+				throw new Exception("Usuário sem áudio registrado");
 			}
 		} catch(Exception e) {
 			erro.addError("Erro ao codificar o áudio. ".concat(e.getMessage()));
@@ -144,16 +149,19 @@ public class UsuarioControle {
 		
 		String hash;
 		try {
-			hash = Hash.MD5(usuario.get().getAudio());
+			hash = Hash.gerarHash(audio, Hash.Algorithm.SHA_512);
 		} catch(Exception e) {
 			erro.addError("Erro ao gerar hash da mensagem. ".concat(e.getMessage()));
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
 				
-		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
-		//responseMensagem.setData(new MensagemDto(usuario.get().getAudio(), hash));
-		responseMensagem.setData(new MensagemDto(null, hash));
+		Response<UsuarioDto> responseMensagem = new Response<UsuarioDto>();
+		UsuarioDto usuarioDto = new UsuarioDto();
+		usuarioDto.setNome(usuario.get().getPessoa() != null ? usuario.get().getPessoa().getNome() : "");
+		usuarioDto.setHash(hash);
+		//usuarioDto.setAudio(audio);
+		responseMensagem.setData(usuarioDto);
 						
 		return ResponseEntity.ok().body(responseMensagem);			
 	}
