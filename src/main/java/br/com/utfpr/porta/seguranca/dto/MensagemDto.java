@@ -9,12 +9,6 @@ public class MensagemDto {
 		this.mensagem = mensagem;
 	}
 	
-	public MensagemDto(String mensagem, String hash) {
-		super();
-		//this.mensagem = mensagem;
-		this.hash = hash;
-	}
-
 	public String getMensagem() {
 		return mensagem;
 	}
