@@ -149,7 +149,7 @@ public class UsuarioControle {
 		
 		String hash;
 		try {
-			hash = Hash.gerarHash(audio, Hash.Algorithm.SHA_512);
+			hash = Hash.gerarHash(audio, Hash.Algorithm.MD5);
 		} catch(Exception e) {
 			erro.addError("Erro ao gerar hash da mensagem. ".concat(e.getMessage()));
 			responseErro.setData(erro);
@@ -284,12 +284,7 @@ public class UsuarioControle {
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseErro);
 		}
-		
-		if(usuario.get().getNrTentativaAcessoPorta() != null && usuario.get().getNrTentativaAcessoPorta() > 0) {
-			usuario.get().setNrTentativaAcessoPorta(0);
-			usuarioServico.salvar(usuario.get());
-		}
-		
+				
 		logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
 		
 		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
