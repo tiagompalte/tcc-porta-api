@@ -1,17 +1,12 @@
 package br.com.utfpr.porta.seguranca.dto;
 
 public class MensagemDto {
-		
-	private String hash;
-	//private String mensagem;
 	
-//	public MensagemDto(String mensagem) {
-//		this.mensagem = mensagem;
-//	}
+	private String mensagem;
 	
-	public MensagemDto(String hash) {
+	public MensagemDto(String mensagem) {
 		super();
-		this.hash = hash;
+		this.mensagem = mensagem;
 	}
 	
 	public MensagemDto(String mensagem, String hash) {
@@ -20,20 +15,12 @@ public class MensagemDto {
 		this.hash = hash;
 	}
 
-//	public String getMensagem() {
-//		return mensagem;
-//	}
-//
-//	public void setMensagem(String mensagem) {
-//		this.mensagem = mensagem;
-//	}
-
-	public String getHash() {
-		return hash;
+	public String getMensagem() {
+		return mensagem;
 	}
 
-	public void setHash(String hash) {
-		this.hash = hash;
+	public void setMensagem(String mensagem) {
+		this.mensagem = mensagem;
 	}
 	
 }
