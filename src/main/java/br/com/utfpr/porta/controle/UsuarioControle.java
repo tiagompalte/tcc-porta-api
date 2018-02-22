@@ -33,7 +33,6 @@ import br.com.utfpr.porta.seguranca.dto.UsuarioDto;
 import br.com.utfpr.porta.seguranca.dto.MensagemDto;
 import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
-import br.com.utfpr.porta.servico.UsuarioServico;
 import br.com.utfpr.porta.storage.AudioStorage;
 import br.com.utfpr.porta.util.Conversao;
 import br.com.utfpr.porta.util.Hash;
@@ -53,10 +52,7 @@ public class UsuarioControle {
 	
 	@Autowired
 	private Usuarios usuariosRepositorio;
-	
-	@Autowired
-	private UsuarioServico usuarioServico;
-	
+		
 	@Autowired
 	private AudioStorage audioStorage;
 		
@@ -225,8 +221,7 @@ public class UsuarioControle {
 		PasswordEncoder pass = new BCryptPasswordEncoder();
 		
 		if(pass.matches(autenticacaoSenha.getSenha(), usuario.get().getSenhaTeclado()) == false) {
-			String retorno = usuarioServico.incrementarNrTentativaAcessoPorta(usuario.get().getCodigo());
-			erro.addError("Senha incorreta".concat(retorno != null ? retorno : ""));
+			erro.addError("Senha incorreta");
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
