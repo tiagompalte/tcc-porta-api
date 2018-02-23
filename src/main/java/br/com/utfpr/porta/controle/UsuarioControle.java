@@ -1,14 +1,21 @@
 package br.com.utfpr.porta.controle;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sound.sampled.AudioFileFormat.Type;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioFormat.Encoding;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 import javax.validation.Valid;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -33,10 +40,7 @@ import br.com.utfpr.porta.seguranca.dto.UsuarioDto;
 import br.com.utfpr.porta.seguranca.dto.MensagemDto;
 import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
-import br.com.utfpr.porta.servico.UsuarioServico;
 import br.com.utfpr.porta.storage.AudioStorage;
-import br.com.utfpr.porta.util.Conversao;
-import br.com.utfpr.porta.util.Hash;
 
 @Controller
 @RequestMapping("/api/usuarios")
@@ -53,10 +57,7 @@ public class UsuarioControle {
 	
 	@Autowired
 	private Usuarios usuariosRepositorio;
-	
-	@Autowired
-	private UsuarioServico usuarioServico;
-	
+		
 	@Autowired
 	private AudioStorage audioStorage;
 		
@@ -127,16 +128,40 @@ public class UsuarioControle {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
 		
-		String audio = null;
+		int[] audio = null;
 		try {			
 			if(!Strings.isEmpty(usuario.get().getNomeAudio())) {
 				
-				byte[] sound = audioStorage.recuperar(usuario.get().getNomeAudio());
-																
-				byte[] alaw = Conversao.convertWavToAlaw(sound);
+				byte[] audio_byte = audioStorage.recuperar(usuario.get().getNomeAudio());
 				
-				audio = Base64.encodeBase64String(alaw);
-												
+				if(audio_byte == null) {
+					throw new NullPointerException("Áudio não pode ser recuperado");
+				}
+				
+				AudioInputStream audioInput = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audio_byte));
+				
+				//AudioFormat audioFormat = new AudioFormat(16000, 8, 1, true, audioInput.getFormat().isBigEndian());
+				AudioFormat audioFormat = new AudioFormat(Encoding.PCM_SIGNED, 16000, 16, 1, 
+						audioInput.getFormat().getFrameSize(), audioInput.getFormat().getFrameRate(), 
+						audioInput.getFormat().isBigEndian());
+				
+//				AudioInputStream outStream = new AudioInputStream(
+//					    new ByteArrayInputStream(audio_byte), audioFormat, 
+//					    audio_byte.length / audioFormat.getFrameSize());
+
+				AudioInputStream outStream = AudioSystem.getAudioInputStream(audioFormat, audioInput);
+								
+				File tempFile = File.createTempFile("audio", ".temp");
+				AudioSystem.write(outStream, Type.WAVE, tempFile);				
+				byte[] tempByte = Files.readAllBytes(tempFile.toPath());
+				
+//				System.out.println(tempFile.getAbsolutePath());
+				
+				audio = new int[tempByte.length];
+				for(int i = 0; i < tempByte.length; i++) {
+					audio[i] = tempByte[i];
+				}
+																
 			}
 			else {
 				throw new Exception("Usuário sem áudio registrado");
@@ -146,21 +171,11 @@ public class UsuarioControle {
 			responseErro.setData(erro);		
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
-		
-		String hash;
-		try {
-			hash = Hash.gerarHash(audio, Hash.Algorithm.MD5);
-		} catch(Exception e) {
-			erro.addError("Erro ao gerar hash da mensagem. ".concat(e.getMessage()));
-			responseErro.setData(erro);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
-		}
 				
 		Response<UsuarioDto> responseMensagem = new Response<UsuarioDto>();
 		UsuarioDto usuarioDto = new UsuarioDto();
 		usuarioDto.setNome(usuario.get().getPessoa() != null ? usuario.get().getPessoa().getNome() : "");
-		usuarioDto.setHash(hash);
-		//usuarioDto.setAudio(audio);
+		usuarioDto.setAudio(audio);
 		responseMensagem.setData(usuarioDto);
 						
 		return ResponseEntity.ok().body(responseMensagem);			
@@ -225,8 +240,7 @@ public class UsuarioControle {
 		PasswordEncoder pass = new BCryptPasswordEncoder();
 		
 		if(pass.matches(autenticacaoSenha.getSenha(), usuario.get().getSenhaTeclado()) == false) {
-			String retorno = usuarioServico.incrementarNrTentativaAcessoPorta(usuario.get().getCodigo());
-			erro.addError("Senha incorreta".concat(retorno != null ? retorno : ""));
+			erro.addError("Senha incorreta");
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
