@@ -2,17 +2,8 @@ package br.com.utfpr.porta.seguranca.dto;
 
 public class UsuarioDto {
 		
-	private String hash;
 	private String nome;
-	//private String audio;
-
-	public String getHash() {
-		return hash;
-	}
-
-	public void setHash(String hash) {
-		this.hash = hash;
-	}
+	private int[] audio;
 
 	public String getNome() {
 		return nome;
@@ -22,11 +13,12 @@ public class UsuarioDto {
 		this.nome = nome;
 	}
 
-//	public String getAudio() {
-//		return audio;
-//	}
-//
-//	public void setAudio(String audio) {
-//		this.audio = audio;
-//	}
+	public int[] getAudio() {
+		return audio;
+	}
+
+	public void setAudio(int[] audio) {
+		this.audio = audio;
+	}
+	
 }
