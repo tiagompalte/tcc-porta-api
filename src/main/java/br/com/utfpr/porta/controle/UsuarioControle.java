@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.sound.sampled.AudioFileFormat.Type;
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioFormat.Encoding;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.validation.Valid;
@@ -140,10 +139,10 @@ public class UsuarioControle {
 				
 				AudioInputStream audioInput = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audio_byte));
 				
-				//AudioFormat audioFormat = new AudioFormat(16000, 8, 1, true, audioInput.getFormat().isBigEndian());
-				AudioFormat audioFormat = new AudioFormat(Encoding.PCM_SIGNED, 16000, 16, 1, 
-						audioInput.getFormat().getFrameSize(), audioInput.getFormat().getFrameRate(), 
-						audioInput.getFormat().isBigEndian());
+				AudioFormat audioFormat = new AudioFormat(16000, 8, 1, true, audioInput.getFormat().isBigEndian());
+//				AudioFormat audioFormat = new AudioFormat(Encoding.PCM_SIGNED, 16000, 8, 1, 
+//						audioInput.getFormat().getFrameSize(), audioInput.getFormat().getFrameRate(), 
+//						audioInput.getFormat().isBigEndian());
 				
 //				AudioInputStream outStream = new AudioInputStream(
 //					    new ByteArrayInputStream(audio_byte), audioFormat, 
