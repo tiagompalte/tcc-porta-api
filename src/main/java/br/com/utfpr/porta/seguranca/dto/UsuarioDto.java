@@ -3,7 +3,7 @@ package br.com.utfpr.porta.seguranca.dto;
 public class UsuarioDto {
 		
 	private String nome;
-	private int[] audio;
+	private String[] audio;
 
 	public String getNome() {
 		return nome;
@@ -13,11 +13,11 @@ public class UsuarioDto {
 		this.nome = nome;
 	}
 
-	public int[] getAudio() {
+	public String[] getAudio() {
 		return audio;
 	}
 
-	public void setAudio(int[] audio) {
+	public void setAudio(String[] audio) {
 		this.audio = audio;
 	}
 	

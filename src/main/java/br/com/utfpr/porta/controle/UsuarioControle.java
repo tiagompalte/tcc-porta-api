@@ -127,7 +127,7 @@ public class UsuarioControle {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
 		
-		int[] audio = null;
+		String[] audio = null;
 		try {			
 			if(!Strings.isEmpty(usuario.get().getNomeAudio())) {
 				
@@ -156,9 +156,9 @@ public class UsuarioControle {
 				
 //				System.out.println(tempFile.getAbsolutePath());
 				
-				audio = new int[tempByte.length];
+				audio = new String[tempByte.length];
 				for(int i = 0; i < tempByte.length; i++) {
-					audio[i] = tempByte[i];
+					audio[i] = String.valueOf(tempByte[i]);
 				}
 																
 			}
