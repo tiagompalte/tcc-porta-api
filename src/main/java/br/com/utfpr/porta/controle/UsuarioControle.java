@@ -121,13 +121,13 @@ public class UsuarioControle {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);
 		}
 		
-		if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
+		if(autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora) == false) {
 			erro.addError("Usuário sem autorização para acesso a porta desejada");
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
 		
-		String[] audio = null;
+		int[] audio = null;
 		try {			
 			if(!Strings.isEmpty(usuario.get().getNomeAudio())) {
 				
@@ -137,28 +137,16 @@ public class UsuarioControle {
 					throw new NullPointerException("Áudio não pode ser recuperado");
 				}
 				
-				AudioInputStream audioInput = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audio_byte));
-				
+				AudioInputStream audioInput = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audio_byte));				
 				AudioFormat audioFormat = new AudioFormat(16000, 8, 1, true, audioInput.getFormat().isBigEndian());
-//				AudioFormat audioFormat = new AudioFormat(Encoding.PCM_SIGNED, 16000, 8, 1, 
-//						audioInput.getFormat().getFrameSize(), audioInput.getFormat().getFrameRate(), 
-//						audioInput.getFormat().isBigEndian());
-				
-//				AudioInputStream outStream = new AudioInputStream(
-//					    new ByteArrayInputStream(audio_byte), audioFormat, 
-//					    audio_byte.length / audioFormat.getFrameSize());
-
-				AudioInputStream outStream = AudioSystem.getAudioInputStream(audioFormat, audioInput);
-								
+				AudioInputStream outStream = AudioSystem.getAudioInputStream(audioFormat, audioInput);								
 				File tempFile = File.createTempFile("audio", ".temp");
 				AudioSystem.write(outStream, Type.WAVE, tempFile);				
 				byte[] tempByte = Files.readAllBytes(tempFile.toPath());
 				
-//				System.out.println(tempFile.getAbsolutePath());
-				
-				audio = new String[tempByte.length];
+				audio = new int[tempByte.length];
 				for(int i = 0; i < tempByte.length; i++) {
-					audio[i] = String.valueOf(tempByte[i]);
+					audio[i] = tempByte[i] + 128;
 				}
 																
 			}
@@ -172,10 +160,8 @@ public class UsuarioControle {
 		}
 				
 		Response<UsuarioDto> responseMensagem = new Response<UsuarioDto>();
-		UsuarioDto usuarioDto = new UsuarioDto();
-		usuarioDto.setNome(usuario.get().getPessoa() != null ? usuario.get().getPessoa().getNome() : "");
-		usuarioDto.setAudio(audio);
-		responseMensagem.setData(usuarioDto);
+		String nome = (usuario.get().getPessoa() != null && Strings.isNotEmpty(usuario.get().getPessoa().getNome()) ? usuario.get().getPessoa().getNome() : "");		
+		responseMensagem.setData(new UsuarioDto(nome, audio));
 						
 		return ResponseEntity.ok().body(responseMensagem);			
 	}
