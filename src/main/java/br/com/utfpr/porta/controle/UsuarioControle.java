@@ -138,15 +138,16 @@ public class UsuarioControle {
 				}
 				
 				AudioInputStream audioInput = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audio_byte));				
-				AudioFormat audioFormat = new AudioFormat(16000, 8, 1, true, audioInput.getFormat().isBigEndian());
+				AudioFormat audioFormat = new AudioFormat(16000, 8, 1, true, audioInput.getFormat().isBigEndian());				
 				AudioInputStream outStream = AudioSystem.getAudioInputStream(audioFormat, audioInput);								
 				File tempFile = File.createTempFile("audio", ".temp");
 				AudioSystem.write(outStream, Type.WAVE, tempFile);				
 				byte[] tempByte = Files.readAllBytes(tempFile.toPath());
 				
-				audio = new int[tempByte.length];
-				for(int i = 0; i < tempByte.length; i++) {
-					audio[i] = tempByte[i] + 128;
+				//Inicia do byte 44 para pular o metadata do arquivo wav				
+				audio = new int[tempByte.length - 44];
+				for(int i = 0; i < tempByte.length - 44; i++) {
+					audio[i] = tempByte[i + 44] + 128;
 				}
 																
 			}
