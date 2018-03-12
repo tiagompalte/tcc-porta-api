@@ -66,7 +66,7 @@ public class UsuarioControle {
 	@Autowired
 	private AudioStorage audioStorage;
 		
-	private LocalDateTime converterZoneParaLocalDateTime(String zone) throws BadRequestException {	
+	private LocalDateTime converterZoneParaLocalDateTime(String zone) {	
 		
 		if(Strings.isEmpty(zone)) {
 			throw new BadRequestException("Zona local não informada");
