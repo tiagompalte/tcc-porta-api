@@ -11,6 +11,11 @@ public class ErroDto {
 		errors = new ArrayList<>();
 	}
 	
+	public ErroDto(String mensagemErro) {
+		errors = new ArrayList<>();
+		errors.add(mensagemErro);
+	}
+	
 	public List<String> getErrors() {
 		return errors;
 	}
