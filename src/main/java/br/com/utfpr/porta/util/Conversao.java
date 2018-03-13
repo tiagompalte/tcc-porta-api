@@ -3,6 +3,7 @@ package br.com.utfpr.porta.util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -53,6 +54,31 @@ public class Conversao {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         AudioSystem.write(ais, Type.WAVE, baos);
         return baos.toByteArray();
+	}
+	
+	public static float[] shortToFloat(short[] pcms) {
+	    float[] floaters = new float[pcms.length];
+	    for (int i = 0; i < pcms.length; i++) {
+	        floaters[i] = pcms[i];
+	    }
+	    return floaters;
+	}
+	
+	public static short[] byteToShort(byte[] bytes) {
+	    short[] out = new short[bytes.length / 2]; // will drop last byte if odd number
+	    ByteBuffer bb = ByteBuffer.wrap(bytes);
+	    for (int i = 0; i < out.length; i++) {
+	        out[i] = bb.getShort();
+	    }
+	    return out;
+	}
+	
+	public static float[] intToFloat(int[] ints) {
+		float[] floaters = new float[ints.length];
+		for (int i = 0; i < ints.length; i++) {
+	        floaters[i] = ints[i];
+	    }
+	    return floaters;
 	}
 
 }

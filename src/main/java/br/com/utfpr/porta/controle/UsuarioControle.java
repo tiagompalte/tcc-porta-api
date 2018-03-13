@@ -38,6 +38,7 @@ import br.com.utfpr.porta.modelo.Usuario;
 import br.com.utfpr.porta.repositorio.Portas;
 import br.com.utfpr.porta.repositorio.Usuarios;
 import br.com.utfpr.porta.response.Response;
+import br.com.utfpr.porta.seguranca.dto.AudioDto;
 import br.com.utfpr.porta.seguranca.dto.AutenticacaoSenhaDto;
 import br.com.utfpr.porta.seguranca.dto.ErroDto;
 import br.com.utfpr.porta.seguranca.dto.MensagemDto;
@@ -45,6 +46,8 @@ import br.com.utfpr.porta.seguranca.dto.UsuarioDto;
 import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
 import br.com.utfpr.porta.storage.AudioStorage;
+import br.com.utfpr.porta.util.Algorithm;
+import br.com.utfpr.porta.util.Conversao;
 
 
 @Controller
@@ -405,6 +408,73 @@ public class UsuarioControle {
 		}
 		
 		return ResponseEntity.ok(responseMensagem);	
+	}
+	
+	@RequestMapping(value="/audio", method=RequestMethod.POST)
+	public ResponseEntity<?> validarAudio(@RequestHeader(value="zone") String zone,
+			HttpServletRequest request, HttpServletResponse response,
+			@Valid @RequestBody AudioDto audioDto) {
+		
+		Response<ErroDto> responseErro = new Response<ErroDto>();
+		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
+		
+		try {
+			
+			if(request.getAttribute("codigo_porta") == null) {
+				throw new BadRequestException("Código da porta não informado");
+			}
+			
+			Long codigo_porta = Long.parseLong(request.getAttribute("codigo_porta").toString());
+			
+			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
+			
+			Optional<Usuario> usuario = obterUsuario(audioDto.getRfid());
+			
+			Porta porta = obterPorta(codigo_porta);
+			
+			if(autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora) == false) {
+				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
+			}
+			
+			int[] audio = converterAudioEmArrayInt(usuario.get().getNomeAudio());
+			
+			float[] bufferDatabase = Conversao.intToFloat(audio);
+			float[] bufferRecebido = Conversao.intToFloat(audioDto.getAudio());
+			
+//			boolean validacao = Algorithm.validate(bufferDatabase, bufferRecebido);
+//			
+//			if(validacao == false) {
+//				throw new UnauthorizedException("Senha falada não confere");
+//			}
+			
+			logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
+						
+			responseMensagem.setData(new MensagemDto("Acesso liberado"));
+			
+		}
+		catch(BadRequestException e) {
+			responseErro.setData(new ErroDto(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);			
+		}
+		catch(NotFoundException e) {
+			responseErro.setData(new ErroDto(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);	
+		}
+		catch(NotAcceptableException e) {
+			responseErro.setData(new ErroDto(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseErro);
+		}
+		catch(UnauthorizedException e) {
+			responseErro.setData(new ErroDto(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
+		}
+		catch(Exception e) {
+			responseErro.setData(new ErroDto(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
+		}
+		
+		return ResponseEntity.ok(responseMensagem);
+		
 	}
 		
 }
