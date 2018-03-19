@@ -42,6 +42,7 @@ import br.com.utfpr.porta.seguranca.dto.AudioDto;
 import br.com.utfpr.porta.seguranca.dto.AutenticacaoSenhaDto;
 import br.com.utfpr.porta.seguranca.dto.ErroDto;
 import br.com.utfpr.porta.seguranca.dto.MensagemDto;
+import br.com.utfpr.porta.seguranca.dto.UsuarioAcessoDto;
 import br.com.utfpr.porta.seguranca.dto.UsuarioDto;
 import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
@@ -304,7 +305,7 @@ public class UsuarioControle {
 			@Valid @RequestBody AutenticacaoSenhaDto autenticacaoSenha) {
 		
 		Response<ErroDto> responseErro = new Response<ErroDto>();
-		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
+		Response<UsuarioAcessoDto> responseMensagem = new Response<UsuarioAcessoDto>();
 		
 		try {
 			
@@ -332,7 +333,7 @@ public class UsuarioControle {
 							
 			logServico.entrarPorta(usuario.get(), porta, dataHora, "digitada");
 						
-			responseMensagem.setData(new MensagemDto("Autorizado"));
+			responseMensagem.setData(new UsuarioAcessoDto("Autorizado", usuario.get().getPessoa().getNome()));
 			
 		}
 		catch(BadRequestException e) {
@@ -416,7 +417,7 @@ public class UsuarioControle {
 			@Valid @RequestBody AudioDto audioDto) {
 		
 		Response<ErroDto> responseErro = new Response<ErroDto>();
-		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
+		Response<UsuarioAcessoDto> responseMensagem = new Response<UsuarioAcessoDto>();
 		
 		try {
 			
@@ -436,10 +437,10 @@ public class UsuarioControle {
 				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
 			}
 			
-			int[] audio = converterAudioEmArrayInt(usuario.get().getNomeAudio());
+//			int[] audio = converterAudioEmArrayInt(usuario.get().getNomeAudio());
 			
-			float[] bufferDatabase = Conversao.intToFloat(audio);
-			float[] bufferRecebido = Conversao.intToFloat(audioDto.getAudio());
+//			float[] bufferDatabase = Conversao.intToFloat(audio);
+//			float[] bufferRecebido = Conversao.intToFloat(audioDto.getAudio());
 			
 //			boolean validacao = Algorithm.validate(bufferDatabase, bufferRecebido);
 //			
@@ -449,7 +450,7 @@ public class UsuarioControle {
 			
 			logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
 						
-			responseMensagem.setData(new MensagemDto("Acesso liberado"));
+			responseMensagem.setData(new UsuarioAcessoDto("Autorizado", usuario.get().getPessoa().getNome()));
 			
 		}
 		catch(BadRequestException e) {
