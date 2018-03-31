@@ -11,7 +11,7 @@ public class AudioDto {
 	private String rfid;
 	@NotNull(message = "Áudio não informada")
 	@NotEmpty(message = "Áudio não pode ser vazio")
-	private int[] audio;
+	private String audio;
 	
 	public String getRfid() {
 		return rfid;
@@ -19,10 +19,10 @@ public class AudioDto {
 	public void setRfid(String rfid) {
 		this.rfid = rfid;
 	}
-	public int[] getAudio() {
+	public String getAudio() {
 		return audio;
 	}
-	public void setAudio(int[] audio) {
+	public void setAudio(String audio) {
 		this.audio = audio;
 	}
 	
