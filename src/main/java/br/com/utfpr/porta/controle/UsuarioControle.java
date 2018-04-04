@@ -437,16 +437,16 @@ public class UsuarioControle {
 				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
 			}
 			
-//			int[] audio = converterAudioEmArrayInt(usuario.get().getNomeAudio());
+			int[] bufferDatabase = converterAudioEmArrayInt(usuario.get().getNomeAudio());
 			
-//			float[] bufferDatabase = Conversao.intToFloat(audio);
-//			float[] bufferRecebido = Conversao.intToFloat(audioDto.getAudio());
+			//float[] bufferDatabase = Conversao.intToFloat(audio);
+			int[] bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
 			
-//			boolean validacao = Algorithm.validate(bufferDatabase, bufferRecebido);
-//			
-//			if(validacao == false) {
-//				throw new UnauthorizedException("Senha falada não confere");
-//			}
+			boolean validacao = Algorithm.validate(bufferDatabase, bufferRecebido);
+			
+			if(validacao == false) {
+				throw new UnauthorizedException("Senha falada não confere");
+			}
 			
 			logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
 						

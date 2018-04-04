@@ -3,8 +3,8 @@ package br.com.utfpr.porta.util;
 public class Algorithm {
 	
 	private static double TOLERANCIA = 0.25;
-	private static int NUM_AMOSTRAS = 32000; //2*16000
-	private static int DELAY_MAX = 1600;	
+	private static int NUM_AMOSTRAS = 22000; //1.5*16000
+	private static int DELAY_MAX = 1100;	
 	
 	private static float max(int nElem, float[] buffer) {
 		

@@ -1,0 +1,203 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>br.com.utfpr</groupId>
+  <artifactId>porta-api</artifactId>
+  <version>1.0.5</version>
+  <packaging>war</packaging>
+  <name>porta-api</name>
+  <description>API do projeto de TCC</description>
+  
+ <properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+		<java.version>1.8</java.version>
+		<maven-compiler-pluging.version>3.2</maven-compiler-pluging.version>
+		<maven-war-pluging.version>2.6</maven-war-pluging.version>
+		
+		<!-- Spring MVC -->
+		<spring-framework.version>4.3.0.RELEASE</spring-framework.version>
+
+		<!-- Servlet API -->
+		<servlet.version>3.1.0</servlet.version>
+
+		<!-- Cache - Guava -->
+		<guava.version>19.0</guava.version>
+
+		<!-- Spring Security -->
+		<spring-security.version>4.1.1.RELEASE</spring-security.version>
+		
+		<!-- JUnit -->
+		<junit.version>4.12</junit.version>
+		
+		<!-- Json Web Token -->
+		<jsonwebtoken.version>0.7.0</jsonwebtoken.version>
+		
+		<!-- Porta Serviço -->
+		<portaservico.version>1.0.8</portaservico.version>
+		
+		<!-- Apache Commons DBCP -->
+		<commons-dbcp2.version>2.1.1</commons-dbcp2.version>
+		
+		<!-- MySQL Connector -->
+		<mysql-connector-java.version>5.1.39</mysql-connector-java.version>
+				
+	</properties>
+	
+	<build>
+		<finalName>${project.artifactId}</finalName>
+	
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-pluging.version}</version>
+				<configuration>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>${maven-war-pluging.version}</version>
+				<configuration>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+				</configuration>
+			</plugin>
+			<plugin>
+	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-dependency-plugin</artifactId>
+	            <version>2.3</version>
+	            <executions>
+	                <execution>
+	                    <phase>package</phase>
+	                    <goals><goal>copy</goal></goals>
+	                    <configuration>
+	                        <artifactItems>
+	                            <artifactItem>
+	                                <groupId>com.github.jsimone</groupId>
+	                                <artifactId>webapp-runner</artifactId>
+	                                <version>8.0.30.2</version>
+	                                <destFileName>webapp-runner.jar</destFileName>
+	                            </artifactItem>
+	                        </artifactItems>
+	                    </configuration>
+	                </execution>
+	            </executions>
+	        </plugin>
+		</plugins>
+	</build>
+	
+	<profiles>
+		<profile>
+			<id>local</id>
+		</profile>
+		
+		<profile>
+			<id>prod</id>
+			
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			
+			<dependencies>
+				<!-- MySQL Driver -->
+				<dependency>
+					<groupId>mysql</groupId>
+					<artifactId>mysql-connector-java</artifactId>
+					<version>${mysql-connector-java.version}</version>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		
+	</profiles>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-framework-bom</artifactId>
+				<version>${spring-framework.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+		
+	<dependencies>
+		<!-- Spring MVC -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- Servlet API -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>${servlet.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		
+		<!-- Spring Context Support -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context-support</artifactId>
+			<scope>compile</scope>
+		</dependency>
+		
+		<!-- Spring Security -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+			<version>${spring-security.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<version>${spring-security.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		
+		<!-- JUnit -->
+		<dependency>
+		    <groupId>junit</groupId>
+		    <artifactId>junit</artifactId>
+		    <version>${junit.version}</version>
+		    <scope>test</scope>
+		</dependency>
+		
+		<!-- Json Web Token -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId> 
+			<artifactId>jjwt</artifactId> 
+			<version>${jsonwebtoken.version}</version>
+         </dependency>
+         
+         <!-- Porta Serviço -->
+         <dependency>
+			<groupId>com.github.tiagompalte</groupId>
+			<artifactId>tcc-porta-servico</artifactId>
+			<version>${portaservico.version}</version>
+		</dependency>
+		
+		<!-- Apache Commons DBCP -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<version>${commons-dbcp2.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		
+	</dependencies>
+  
+</project>

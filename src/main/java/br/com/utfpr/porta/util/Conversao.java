@@ -73,12 +73,20 @@ public class Conversao {
 	    return out;
 	}
 	
-	public static float[] intToFloat(int[] ints) {
-		float[] floaters = new float[ints.length];
-		for (int i = 0; i < ints.length; i++) {
-	        floaters[i] = ints[i];
+//	public static float[] intToFloat(int[] ints) {
+//		float[] floaters = new float[ints.length];
+//		for (int i = 0; i < ints.length; i++) {
+//	        floaters[i] = ints[i];
+//	    }
+//	    return floaters;
+//	}
+	
+	public static int[] stringToInt(String chars) {
+		int[] ints = new int[chars.length()];
+		for (int i = 0; i < chars.length(); i++) {
+	        ints[i] = (int) chars.charAt(i);
 	    }
-	    return floaters;
+	    return ints;
 	}
 
 }
