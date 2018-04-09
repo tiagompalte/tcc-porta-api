@@ -1,61 +1,99 @@
 package br.com.utfpr.porta.util;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.File;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.sound.sampled.AudioFileFormat.Type;
-import javax.sound.sampled.AudioFormat.Encoding;
 
 public class Conversao {
 	
-	public static byte[] convertWavToAlaw(byte[] sound) throws IOException, UnsupportedAudioFileException {		
-		AudioInputStream ais = toStream(sound);
-		ais = convertAsStream(ais);	
-		return toByteArray(ais);
-	}
+	public static String convertHexToDecimal(String hex, boolean invertido) throws Exception {
 		
-	private static AudioInputStream toStream(byte[] bytes) throws IOException, UnsupportedAudioFileException {
-		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-		AudioInputStream ais = AudioSystem.getAudioInputStream(bais);
-		return ais;
-	}
-	
-	private static AudioInputStream convertAsStream(AudioInputStream sourceStream) {	
+		if(hex == null || hex.isEmpty()) {
+			throw new NullPointerException("Código hexadecimal não informado");
+		}
 		
-		AudioFormat sourceFormat = sourceStream.getFormat();
-		AudioInputStream targetStream = null;
-
-		if (!AudioSystem.isConversionSupported(Encoding.ALAW, sourceFormat)) {
-			AudioFormat intermediateFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
-					sourceFormat.getSampleRate(), 16, sourceFormat.getChannels(), 2 * sourceFormat.getChannels(), // frameSize
-					sourceFormat.getSampleRate(), false);
-
-			if (AudioSystem.isConversionSupported(intermediateFormat, sourceFormat)) {				
-				sourceStream = AudioSystem.getAudioInputStream(intermediateFormat, sourceStream);
+		String[] regex = hex.split("\\s");
+		StringBuilder concatenar = new StringBuilder();
+		
+		if(invertido) {
+			for(int i = regex.length-1; i >= 0; i--) {
+				concatenar.append(regex[i]);
 			}
 		}
-
-		targetStream = AudioSystem.getAudioInputStream(Encoding.ALAW, sourceStream);
-
-		if (targetStream == null) {
-			throw new RuntimeException("Audio conversion not supported");
+		else {
+			for(int i = 0; i < regex.length; i++) {
+				concatenar.append(regex[i]);
+			}
 		}
-
-		return targetStream;
+		
+		int numero;
+		try {
+			numero = Integer.parseInt(concatenar.toString(), 16);
+		}
+		catch(NumberFormatException e) {
+			throw new Exception("Erro ao converter código hexadecimal em decimal. ".concat(e.getMessage()));
+		}
+		
+		return String.valueOf(numero);
 	}
 	
-	private static byte[] toByteArray(AudioInputStream ais) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        AudioSystem.write(ais, Type.WAVE, baos);
-        return baos.toByteArray();
-	}
+	public static int[] comprimirAudio(byte[] audio_byte) throws Exception {
+				
+		int[] audio = null;
+		try {			
+						
+			if(audio_byte == null) {
+				throw new NullPointerException("Áudio não pode ser recuperado");
+			}
+			
+			AudioInputStream audioInput = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audio_byte));				
+			AudioFormat audioFormat = new AudioFormat(16000, 8, 1, true, audioInput.getFormat().isBigEndian());				
+			AudioInputStream outStream = AudioSystem.getAudioInputStream(audioFormat, audioInput);								
+			File tempFile = File.createTempFile("audio", ".temp");
+			AudioSystem.write(outStream, Type.WAVE, tempFile);				
+			byte[] tempByte = Files.readAllBytes(tempFile.toPath());
+			
+			//Inicia do byte 44 para pular o metadata do arquivo wav				
+			audio = new int[tempByte.length - 44];
+			for(int i = 0; i < tempByte.length - 44; i++) {
+				audio[i] = tempByte[i + 44] + 128;
+			}
+		} catch(Exception e) {
+			throw new Exception("Erro ao codificar o áudio. ".concat(e.getMessage()));
+		}
+		
+		return audio;
+	}	
 	
+	public static int[] leituraArquivoTXT(Path arquivo) throws Exception {
+				
+		int[] int_array = null;
+		try {			
+						
+			if(arquivo == null) {
+				throw new NullPointerException("Nenhum arquivo recebido");
+			}
+			
+			List<String> linhas_arquivo = Files.readAllLines(arquivo);
+			int_array = new int[linhas_arquivo.size()];
+			for(int i = 0; i < linhas_arquivo.size(); i++) {
+				int_array[i] = Integer.parseInt(linhas_arquivo.get(i));
+			}
+		} catch(Exception e) {
+			throw new Exception("Erro ao converter array. ".concat(e.getMessage()));
+		}
+		
+		return int_array;
+	}
+		
 	public static float[] shortToFloat(short[] pcms) {
 	    float[] floaters = new float[pcms.length];
 	    for (int i = 0; i < pcms.length; i++) {

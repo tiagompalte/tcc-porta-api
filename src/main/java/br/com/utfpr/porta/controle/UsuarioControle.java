@@ -1,8 +1,5 @@
 package br.com.utfpr.porta.controle;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -10,10 +7,6 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sound.sampled.AudioFileFormat.Type;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
 import javax.validation.Valid;
 
 import org.apache.logging.log4j.util.Strings;
@@ -119,41 +112,7 @@ public class UsuarioControle {
 		
 		return porta;
 	}
-	
-	private int[] converterAudioEmArrayInt(String nome_audio) throws Exception {
-		
-		if(Strings.isEmpty(nome_audio)) {
-			throw new Exception("Usuário sem áudio registrado");
-		}
-		
-		int[] audio = null;
-		try {			
 			
-			byte[] audio_byte = audioStorage.recuperar(nome_audio);
-			
-			if(audio_byte == null) {
-				throw new NullPointerException("Áudio não pode ser recuperado");
-			}
-			
-			AudioInputStream audioInput = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audio_byte));				
-			AudioFormat audioFormat = new AudioFormat(16000, 8, 1, true, audioInput.getFormat().isBigEndian());				
-			AudioInputStream outStream = AudioSystem.getAudioInputStream(audioFormat, audioInput);								
-			File tempFile = File.createTempFile("audio", ".temp");
-			AudioSystem.write(outStream, Type.WAVE, tempFile);				
-			byte[] tempByte = Files.readAllBytes(tempFile.toPath());
-			
-			//Inicia do byte 44 para pular o metadata do arquivo wav				
-			audio = new int[tempByte.length - 44];
-			for(int i = 0; i < tempByte.length - 44; i++) {
-				audio[i] = tempByte[i + 44] + 128;
-			}
-		} catch(Exception e) {
-			throw new Exception("Erro ao codificar o áudio. ".concat(e.getMessage()));
-		}
-		
-		return audio;
-	}
-	
 	@RequestMapping(value="/rfid/{rfid}", method=RequestMethod.GET)
 	public ResponseEntity<?> obterUsuarioPorRFID(
 			@RequestHeader(value="zone") String zone, @PathVariable String rfid,
@@ -188,7 +147,7 @@ public class UsuarioControle {
 				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
 			}
 			
-			int[] audio = converterAudioEmArrayInt(usuario.get().getNomeAudio());
+			int[] audio = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
 						
 			String nome = (usuario.get().getPessoa() != null && Strings.isNotEmpty(usuario.get().getPessoa().getNome()) 
 									? usuario.get().getPessoa().getNome() : "");		
@@ -245,7 +204,7 @@ public class UsuarioControle {
 				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
 			}
 			
-			int[] audio = converterAudioEmArrayInt(usuario.get().getNomeAudio());
+			int[] audio = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
 			
 			String nome = (usuario.get().getPessoa() != null && Strings.isNotEmpty(usuario.get().getPessoa().getNome()) 
 					? usuario.get().getPessoa().getNome() : "");
@@ -429,7 +388,7 @@ public class UsuarioControle {
 			
 			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
 			
-			Optional<Usuario> usuario = obterUsuario(audioDto.getRfid());
+			Optional<Usuario> usuario = obterUsuario(Conversao.convertHexToDecimal(audioDto.getRfid(), true));
 			
 			Porta porta = obterPorta(codigo_porta);
 			
@@ -437,7 +396,7 @@ public class UsuarioControle {
 				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
 			}
 			
-			int[] bufferDatabase = converterAudioEmArrayInt(usuario.get().getNomeAudio());
+			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
 			
 			//float[] bufferDatabase = Conversao.intToFloat(audio);
 			int[] bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
