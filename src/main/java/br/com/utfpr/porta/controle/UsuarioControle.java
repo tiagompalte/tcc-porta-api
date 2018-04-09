@@ -26,8 +26,10 @@ import br.com.utfpr.porta.controle.exception.BadRequestException;
 import br.com.utfpr.porta.controle.exception.NotAcceptableException;
 import br.com.utfpr.porta.controle.exception.NotFoundException;
 import br.com.utfpr.porta.controle.exception.UnauthorizedException;
+import br.com.utfpr.porta.modelo.Parametro;
 import br.com.utfpr.porta.modelo.Porta;
 import br.com.utfpr.porta.modelo.Usuario;
+import br.com.utfpr.porta.repositorio.Parametros;
 import br.com.utfpr.porta.repositorio.Portas;
 import br.com.utfpr.porta.repositorio.Usuarios;
 import br.com.utfpr.porta.response.Response;
@@ -62,6 +64,9 @@ public class UsuarioControle {
 		
 	@Autowired
 	private AudioStorage audioStorage;
+	
+	@Autowired
+	private Parametros parametrosRepositorio;
 		
 	private LocalDateTime converterZoneParaLocalDateTime(String zone) {	
 		
@@ -276,7 +281,7 @@ public class UsuarioControle {
 			
 			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
 			
-			Optional<Usuario> usuario = obterUsuario(autenticacaoSenha.getRfid());
+			Optional<Usuario> usuario = obterUsuario(Conversao.convertHexToDecimal(autenticacaoSenha.getRfid(), true));
 			
 			Porta porta = obterPorta(codigo_porta);
 			
@@ -396,12 +401,34 @@ public class UsuarioControle {
 				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
 			}
 			
+			Parametro par_tolerancia = parametrosRepositorio.findOne("TOLERANCIA");
+			double tolerancia = 0.0;
+			
+			if(par_tolerancia != null && Strings.isNotEmpty(par_tolerancia.getValor())) {
+				
+				if(par_tolerancia.getValor().contains(",")) {
+					par_tolerancia.setValor(par_tolerancia.getValor().replace(",", "."));
+				}
+				
+				try {
+					tolerancia = Double.valueOf(par_tolerancia.getValor());
+				}
+				catch(Exception e) {
+					throw new Exception("Erro ao converter o tipo do parâmetro de tolerância");
+				}
+			}
+			
 			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
 			
-			//float[] bufferDatabase = Conversao.intToFloat(audio);
-			int[] bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
+			int[] bufferRecebido = null;
+			try {				
+				bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
+			}
+			catch(Exception e) {
+				throw new Exception("Erro ao converter o tipo do áudio recebido");
+			}
 			
-			boolean validacao = Algorithm.validate(0, bufferDatabase, bufferRecebido);
+			boolean validacao = Algorithm.validate(tolerancia, bufferDatabase, bufferRecebido);
 			
 			if(validacao == false) {
 				throw new UnauthorizedException("Senha falada não confere");
