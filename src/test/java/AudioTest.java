@@ -13,8 +13,8 @@ import br.com.utfpr.porta.util.Conversao;
 public class AudioTest {
 	
 	private static Path PATH_AUDIOS = getDefault().getPath(System.getenv("USERPROFILE"), ".portaaudios");
-	private static String NOME_ARQ_FILE_DATABASE = "";
-	private static String NOME_ARQ_FILE_RECEBIDO = "";
+	private static String NOME_ARQ_FILE_DATABASE = "teste2.wav";
+	private static String NOME_ARQ_FILE_RECEBIDO = "posFiltro17.txt";
 	
 	private int[] bufferDatabase;
 	private int[] bufferRecebido;	
@@ -40,7 +40,7 @@ public class AudioTest {
 	@Test
 	public void validarAudio() {
 		
-		boolean validacao = Algorithm.validate(bufferDatabase, bufferRecebido);
+		boolean validacao = Algorithm.validate(0.25, bufferDatabase, bufferRecebido);
 		
 		assertTrue(validacao);
 	}
