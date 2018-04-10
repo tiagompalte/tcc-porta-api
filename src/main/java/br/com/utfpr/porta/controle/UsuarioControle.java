@@ -1,8 +1,5 @@
 package br.com.utfpr.porta.controle;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -10,10 +7,6 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sound.sampled.AudioFileFormat.Type;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
 import javax.validation.Valid;
 
 import org.apache.logging.log4j.util.Strings;
@@ -33,8 +26,10 @@ import br.com.utfpr.porta.controle.exception.BadRequestException;
 import br.com.utfpr.porta.controle.exception.NotAcceptableException;
 import br.com.utfpr.porta.controle.exception.NotFoundException;
 import br.com.utfpr.porta.controle.exception.UnauthorizedException;
+import br.com.utfpr.porta.modelo.Parametro;
 import br.com.utfpr.porta.modelo.Porta;
 import br.com.utfpr.porta.modelo.Usuario;
+import br.com.utfpr.porta.repositorio.Parametros;
 import br.com.utfpr.porta.repositorio.Portas;
 import br.com.utfpr.porta.repositorio.Usuarios;
 import br.com.utfpr.porta.response.Response;
@@ -69,6 +64,9 @@ public class UsuarioControle {
 		
 	@Autowired
 	private AudioStorage audioStorage;
+	
+	@Autowired
+	private Parametros parametrosRepositorio;
 		
 	private LocalDateTime converterZoneParaLocalDateTime(String zone) {	
 		
@@ -119,41 +117,7 @@ public class UsuarioControle {
 		
 		return porta;
 	}
-	
-	private int[] converterAudioEmArrayInt(String nome_audio) throws Exception {
-		
-		if(Strings.isEmpty(nome_audio)) {
-			throw new Exception("Usuário sem áudio registrado");
-		}
-		
-		int[] audio = null;
-		try {			
 			
-			byte[] audio_byte = audioStorage.recuperar(nome_audio);
-			
-			if(audio_byte == null) {
-				throw new NullPointerException("Áudio não pode ser recuperado");
-			}
-			
-			AudioInputStream audioInput = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audio_byte));				
-			AudioFormat audioFormat = new AudioFormat(16000, 8, 1, true, audioInput.getFormat().isBigEndian());				
-			AudioInputStream outStream = AudioSystem.getAudioInputStream(audioFormat, audioInput);								
-			File tempFile = File.createTempFile("audio", ".temp");
-			AudioSystem.write(outStream, Type.WAVE, tempFile);				
-			byte[] tempByte = Files.readAllBytes(tempFile.toPath());
-			
-			//Inicia do byte 44 para pular o metadata do arquivo wav				
-			audio = new int[tempByte.length - 44];
-			for(int i = 0; i < tempByte.length - 44; i++) {
-				audio[i] = tempByte[i + 44] + 128;
-			}
-		} catch(Exception e) {
-			throw new Exception("Erro ao codificar o áudio. ".concat(e.getMessage()));
-		}
-		
-		return audio;
-	}
-	
 	@RequestMapping(value="/rfid/{rfid}", method=RequestMethod.GET)
 	public ResponseEntity<?> obterUsuarioPorRFID(
 			@RequestHeader(value="zone") String zone, @PathVariable String rfid,
@@ -188,7 +152,7 @@ public class UsuarioControle {
 				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
 			}
 			
-			int[] audio = converterAudioEmArrayInt(usuario.get().getNomeAudio());
+			int[] audio = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
 						
 			String nome = (usuario.get().getPessoa() != null && Strings.isNotEmpty(usuario.get().getPessoa().getNome()) 
 									? usuario.get().getPessoa().getNome() : "");		
@@ -245,7 +209,7 @@ public class UsuarioControle {
 				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
 			}
 			
-			int[] audio = converterAudioEmArrayInt(usuario.get().getNomeAudio());
+			int[] audio = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
 			
 			String nome = (usuario.get().getPessoa() != null && Strings.isNotEmpty(usuario.get().getPessoa().getNome()) 
 					? usuario.get().getPessoa().getNome() : "");
@@ -317,7 +281,7 @@ public class UsuarioControle {
 			
 			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
 			
-			Optional<Usuario> usuario = obterUsuario(autenticacaoSenha.getRfid());
+			Optional<Usuario> usuario = obterUsuario(Conversao.convertHexToDecimal(autenticacaoSenha.getRfid(), true));
 			
 			Porta porta = obterPorta(codigo_porta);
 			
@@ -429,7 +393,7 @@ public class UsuarioControle {
 			
 			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
 			
-			Optional<Usuario> usuario = obterUsuario(audioDto.getRfid());
+			Optional<Usuario> usuario = obterUsuario(Conversao.convertHexToDecimal(audioDto.getRfid(), true));
 			
 			Porta porta = obterPorta(codigo_porta);
 			
@@ -437,16 +401,38 @@ public class UsuarioControle {
 				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
 			}
 			
-//			int[] audio = converterAudioEmArrayInt(usuario.get().getNomeAudio());
+			Parametro par_tolerancia = parametrosRepositorio.findOne("TOLERANCIA");
+			double tolerancia = 0.0;
 			
-//			float[] bufferDatabase = Conversao.intToFloat(audio);
-//			float[] bufferRecebido = Conversao.intToFloat(audioDto.getAudio());
+			if(par_tolerancia != null && Strings.isNotEmpty(par_tolerancia.getValor())) {
+				
+				if(par_tolerancia.getValor().contains(",")) {
+					par_tolerancia.setValor(par_tolerancia.getValor().replace(",", "."));
+				}
+				
+				try {
+					tolerancia = Double.valueOf(par_tolerancia.getValor());
+				}
+				catch(Exception e) {
+					throw new Exception("Erro ao converter o tipo do parâmetro de tolerância");
+				}
+			}
 			
-//			boolean validacao = Algorithm.validate(bufferDatabase, bufferRecebido);
-//			
-//			if(validacao == false) {
-//				throw new UnauthorizedException("Senha falada não confere");
-//			}
+			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
+			
+			int[] bufferRecebido = null;
+			try {				
+				bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
+			}
+			catch(Exception e) {
+				throw new Exception("Erro ao converter o tipo do áudio recebido");
+			}
+			
+			boolean validacao = Algorithm.validate(tolerancia, bufferDatabase, bufferRecebido);
+			
+			if(validacao == false) {
+				throw new UnauthorizedException("Senha falada não confere");
+			}
 			
 			logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
 						
