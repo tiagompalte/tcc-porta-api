@@ -418,21 +418,21 @@ public class UsuarioControle {
 				}
 			}
 			
-			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
-			
-			int[] bufferRecebido = null;
-			try {				
-				bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
-			}
-			catch(Exception e) {
-				throw new Exception("Erro ao converter o tipo do áudio recebido");
-			}
-			
-			boolean validacao = Algorithm.validate(tolerancia, bufferDatabase, bufferRecebido);
-			
-			if(validacao == false) {
-				throw new UnauthorizedException("Senha falada não confere");
-			}
+//			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
+//			
+//			int[] bufferRecebido = null;
+//			try {				
+//				bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
+//			}
+//			catch(Exception e) {
+//				throw new Exception("Erro ao converter o tipo do áudio recebido");
+//			}
+//			
+//			boolean validacao = Algorithm.validate(tolerancia, bufferDatabase, bufferRecebido);
+//			
+//			if(validacao == false) {
+//				throw new UnauthorizedException("Senha falada não confere");
+//			}
 			
 			logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
 						
