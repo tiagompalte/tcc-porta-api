@@ -42,3 +42,4 @@ Procfile
 hs_err_pid*
 src/main/resources/rebel.xml
 src/main/webapp/META-INF/context.xml
+\.tern-project
