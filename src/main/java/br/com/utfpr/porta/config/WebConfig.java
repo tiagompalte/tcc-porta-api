@@ -2,7 +2,6 @@ package br.com.utfpr.porta.config;
 
 import java.util.Locale;
 
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
@@ -36,14 +35,13 @@ public class WebConfig extends WebMvcConfigurerAdapter implements ApplicationCon
 	private ApplicationContext applicationContext;
 
 	@Override
-	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+	public void setApplicationContext(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
 	}
 		
 	@Bean
-	public FormattingConversionService mvcConversionService() {		
-		DefaultFormattingConversionService conversionService = new DefaultFormattingConversionService();
-		return conversionService;
+	public FormattingConversionService mvcConversionService() {
+		return new DefaultFormattingConversionService();
 	}
 		
 	@Bean
@@ -81,5 +79,10 @@ public class WebConfig extends WebMvcConfigurerAdapter implements ApplicationCon
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		registry.addResourceHandler("/**").addResourceLocations("classpath:/static/");
+	}
+	
+	@Bean
+	public ScheduledTasks scheduledTask() {
+		return new ScheduledTasks();
 	}
 }
