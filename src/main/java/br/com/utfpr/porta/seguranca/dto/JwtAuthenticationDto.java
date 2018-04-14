@@ -12,8 +12,6 @@ public class JwtAuthenticationDto {
 	@NotNull(message = "Senha não informada")
 	@NotEmpty(message = "Senha não pode ser vazia")
 	private String senha;
-
-	public JwtAuthenticationDto() {}
 	
 	public String getCodigo() {
 		return codigo;

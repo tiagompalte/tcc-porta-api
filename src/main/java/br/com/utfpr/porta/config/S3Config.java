@@ -23,23 +23,26 @@ public class S3Config {
 	
 	@Autowired
 	private Environment env;
+	
+	private static final String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
+	private static final String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
 			
 	@Profile("local")
 	@Bean
 	public AmazonS3 amazonS3Local() {
 		
-		if(StringUtils.isEmpty(env.getProperty("AWS_ACCESS_KEY_ID")) || StringUtils.isEmpty(env.getProperty("AWS_SECRET_ACCESS_KEY"))) {
+		if(StringUtils.isEmpty(env.getProperty(AWS_ACCESS_KEY_ID)) || StringUtils.isEmpty(env.getProperty(AWS_SECRET_ACCESS_KEY))) {
 			return null;
 		}
 				
-		return amazonS3(env.getProperty("AWS_ACCESS_KEY_ID"), env.getProperty("AWS_SECRET_ACCESS_KEY"));
+		return amazonS3(env.getProperty(AWS_ACCESS_KEY_ID), env.getProperty(AWS_SECRET_ACCESS_KEY));
 	}
 
 	@Profile("prod")
 	@Bean
 	public AmazonS3 amazonS3Prod() {
 						
-		return amazonS3(System.getenv("AWS_ACCESS_KEY_ID"), System.getenv("AWS_SECRET_ACCESS_KEY"));
+		return amazonS3(System.getenv(AWS_ACCESS_KEY_ID), System.getenv(AWS_SECRET_ACCESS_KEY));
 	}
 	
 	private AmazonS3 amazonS3(String id, String access) {

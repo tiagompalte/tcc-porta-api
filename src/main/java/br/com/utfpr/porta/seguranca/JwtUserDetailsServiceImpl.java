@@ -16,7 +16,7 @@ public class JwtUserDetailsServiceImpl implements UserDetailsService {
 	private Portas portasRepositorio;
 
 	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+	public UserDetails loadUserByUsername(String username) {
 					
 		Porta porta = portasRepositorio.findOne(Long.valueOf(username));
 

@@ -27,6 +27,8 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
 	@Autowired
 	private JwtTokenUtil jwtTokenUtil;
+	
+	private static final String CONTENT_TYPE_JSON = "application/json";
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -40,7 +42,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 		
 		if(token == null || token.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.setContentType("application/json");
+			response.setContentType(CONTENT_TYPE_JSON);
 			response.getWriter().write("{\"cod\": 400}");
 			response.getWriter().flush();
 			response.getWriter().close();
@@ -53,7 +55,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 		}
 		catch(Exception e) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			response.setContentType("application/json");
+			response.setContentType(CONTENT_TYPE_JSON);
 			response.getWriter().write("{\"cod\": 401}");
 			response.getWriter().flush();
 			response.getWriter().close();
@@ -73,7 +75,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 			}
 			catch(Exception e) {
 				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				response.setContentType("application/json");
+				response.setContentType(CONTENT_TYPE_JSON);
 				response.getWriter().write("{\"cod\": 401}");
 				response.getWriter().flush();
 				response.getWriter().close();

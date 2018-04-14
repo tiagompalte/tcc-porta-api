@@ -31,7 +31,7 @@ public class JwtUserFactory {
 	 * @return List<GrantedAuthority>
 	 */
 	private static List<GrantedAuthority> mapToGrantedAuthorities() {
-		List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+		List<GrantedAuthority> authorities = new ArrayList<>();
 		authorities.add(new SimpleGrantedAuthority(PerfilEnum.ROLE_VALIDACAO.toString()));
 		return authorities;
 	}
