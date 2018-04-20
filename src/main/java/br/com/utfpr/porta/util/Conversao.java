@@ -10,11 +10,20 @@ import java.util.List;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+
+import org.apache.logging.log4j.util.Strings;
+
+import br.com.utfpr.porta.controle.exception.ConversaoException;
+
 import javax.sound.sampled.AudioFileFormat.Type;
 
 public class Conversao {
 	
-	public static String convertHexToDecimal(String hex, boolean invertido) throws Exception {
+	private Conversao() {
+		throw new IllegalStateException("Utility class");
+	}
+	
+	public static String convertHexToDecimal(String hex, boolean invertido) {
 		
 		if(hex == null || hex.isEmpty()) {
 			throw new NullPointerException("Código hexadecimal não informado");
@@ -39,22 +48,22 @@ public class Conversao {
 			numero = Integer.parseInt(concatenar.toString(), 16);
 		}
 		catch(NumberFormatException e) {
-			throw new Exception("Erro ao converter código hexadecimal em decimal. ".concat(e.getMessage()));
+			throw new ConversaoException("Erro ao converter código hexadecimal em decimal. ".concat(e.getMessage()));
 		}
 		
 		return String.valueOf(numero);
 	}
 	
-	public static int[] comprimirAudio(byte[] audio_byte) throws Exception {
+	public static int[] comprimirAudio(byte[] audioByte) {
 				
 		int[] audio = null;
 		try {			
 						
-			if(audio_byte == null) {
+			if(audioByte == null) {
 				throw new NullPointerException("Áudio não pode ser recuperado");
 			}
 			
-			AudioInputStream audioInput = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audio_byte));				
+			AudioInputStream audioInput = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audioByte));				
 			AudioFormat audioFormat = new AudioFormat(16000, 8, 1, true, audioInput.getFormat().isBigEndian());				
 			AudioInputStream outStream = AudioSystem.getAudioInputStream(audioFormat, audioInput);								
 			File tempFile = File.createTempFile("audio", ".temp");
@@ -67,31 +76,31 @@ public class Conversao {
 				audio[i] = tempByte[i + 44] + 128;
 			}
 		} catch(Exception e) {
-			throw new Exception("Erro ao codificar o áudio. ".concat(e.getMessage()));
+			throw new ConversaoException("Erro ao codificar o áudio. ".concat(e.getMessage()));
 		}
 		
 		return audio;
 	}	
 	
-	public static int[] leituraArquivoTXT(Path arquivo) throws Exception {
+	public static int[] leituraArquivoTXT(Path arquivo) {
 				
-		int[] int_array = null;
+		int[] intArray = null;
 		try {			
 						
 			if(arquivo == null) {
 				throw new NullPointerException("Nenhum arquivo recebido");
 			}
 			
-			List<String> linhas_arquivo = Files.readAllLines(arquivo);
-			int_array = new int[linhas_arquivo.size()];
-			for(int i = 0; i < linhas_arquivo.size(); i++) {
-				int_array[i] = Integer.parseInt(linhas_arquivo.get(i));
+			List<String> linhasArquivo = Files.readAllLines(arquivo);
+			intArray = new int[linhasArquivo.size()];
+			for(int i = 0; i < linhasArquivo.size(); i++) {
+				intArray[i] = Integer.parseInt(linhasArquivo.get(i));
 			}
 		} catch(Exception e) {
-			throw new Exception("Erro ao converter array. ".concat(e.getMessage()));
+			throw new ConversaoException("Erro ao converter array. ".concat(e.getMessage()));
 		}
 		
-		return int_array;
+		return intArray;
 	}
 		
 	public static float[] shortToFloat(short[] pcms) {
@@ -110,21 +119,31 @@ public class Conversao {
 	    }
 	    return out;
 	}
-	
-//	public static float[] intToFloat(int[] ints) {
-//		float[] floaters = new float[ints.length];
-//		for (int i = 0; i < ints.length; i++) {
-//	        floaters[i] = ints[i];
-//	    }
-//	    return floaters;
-//	}
-	
+		
 	public static int[] stringToInt(String chars) {
 		int[] ints = new int[chars.length()];
 		for (int i = 0; i < chars.length(); i++) {
 	        ints[i] = (int) chars.charAt(i);
 	    }
 	    return ints;
+	}
+	
+	public static double stringToDouble(String texto, String mensagemErro) {
+		
+		if(Strings.isEmpty(texto)) {
+			throw new NullPointerException();
+		}
+		
+		if(texto.contains(",")) {
+			texto = texto.replace(",", ".");
+		}
+		
+		try {
+			return Double.valueOf(texto);
+		}
+		catch(Exception e) {
+			throw new ConversaoException(Strings.isNotEmpty(mensagemErro) ? mensagemErro : "Erro de conversao");
+		}
 	}
 
 }

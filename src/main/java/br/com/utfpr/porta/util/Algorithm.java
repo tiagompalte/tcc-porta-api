@@ -2,9 +2,12 @@ package br.com.utfpr.porta.util;
 
 public class Algorithm {
 	
-	private double tolerancia;
-	private static int NUM_AMOSTRAS = 22000; //1.5*16000
-	private static int DELAY_MAX = 1600;	
+	private static final int NUM_AMOSTRAS = 22000; //1.5*16000
+	private static final int DELAY_MAX = 1600;	
+	
+	private Algorithm() {
+		throw new IllegalStateException("Utility class");
+	}
 	
 	private static float max(int nElem, float[] buffer) {
 		

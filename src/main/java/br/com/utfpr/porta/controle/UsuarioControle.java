@@ -2,7 +2,6 @@ package br.com.utfpr.porta.controle;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,9 +34,7 @@ import br.com.utfpr.porta.response.Response;
 import br.com.utfpr.porta.seguranca.dto.AudioDto;
 import br.com.utfpr.porta.seguranca.dto.AutenticacaoSenhaDto;
 import br.com.utfpr.porta.seguranca.dto.ErroDto;
-import br.com.utfpr.porta.seguranca.dto.MensagemDto;
 import br.com.utfpr.porta.seguranca.dto.UsuarioAcessoDto;
-import br.com.utfpr.porta.seguranca.dto.UsuarioDto;
 import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
 import br.com.utfpr.porta.storage.AudioStorage;
@@ -67,6 +63,8 @@ public class UsuarioControle {
 	
 	@Autowired
 	private Parametros parametrosRepositorio;
+	
+	private static final String CODIGO_PORTA = "codigo_porta";
 		
 	private LocalDateTime converterZoneParaLocalDateTime(String zone) {	
 		
@@ -96,7 +94,7 @@ public class UsuarioControle {
 			throw new NotFoundException("Usuário não encontrado");
 		}
 		
-		if(usuario.get().getAtivo() == false) {
+		if(!usuario.get().getAtivo()) {
 			throw new NotAcceptableException("Usuário inativo");
 		}
 		
@@ -107,9 +105,9 @@ public class UsuarioControle {
 		return usuario;		
 	}
 	
-	private Porta obterPorta(Long codigo_porta) {
+	private Porta obterPorta(Long codigoPorta) {
 		
-		Porta porta = portasRepositorio.findOne(codigo_porta);
+		Porta porta = portasRepositorio.findOne(codigoPorta);
 		
 		if(porta == null) {
 			throw new NotFoundException("Porta não encontrada");
@@ -117,181 +115,36 @@ public class UsuarioControle {
 		
 		return porta;
 	}
-			
-	@RequestMapping(value="/rfid/{rfid}", method=RequestMethod.GET)
-	public ResponseEntity<?> obterUsuarioPorRFID(
-			@RequestHeader(value="zone") String zone, @PathVariable String rfid,
-			HttpServletRequest request, HttpServletResponse response) {
-		
-		return obterUsuarioPorRFID_versao2(zone, rfid, request, response);
-	}
-		
-	@RequestMapping(value="/rfid/{rfid}", method=RequestMethod.GET, headers = "X-API-Version=v1")
-	public ResponseEntity<?> obterUsuarioPorRFID_versao1(
-			@RequestHeader(value="zone") String zone, @PathVariable String rfid,
-			HttpServletRequest request, HttpServletResponse response) {
-		
-		Response<ErroDto> responseErro = new Response<ErroDto>();
-		Response<UsuarioDto> responseMensagem = new Response<UsuarioDto>();
-		
-		try {
-			
-			if(request.getAttribute("codigo_porta") == null) {
-				throw new BadRequestException("Código da porta não informado");
-			}
-			
-			Long codigo_porta = Long.parseLong(request.getAttribute("codigo_porta").toString());
-			
-			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
-			
-			Optional<Usuario> usuario = obterUsuario(rfid);
-			
-			Porta porta = obterPorta(codigo_porta);
-			
-			if(autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora) == false) {
-				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
-			}
-			
-			int[] audio = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
-						
-			String nome = (usuario.get().getPessoa() != null && Strings.isNotEmpty(usuario.get().getPessoa().getNome()) 
-									? usuario.get().getPessoa().getNome() : "");		
-			responseMensagem.setData(new UsuarioDto(nome, audio));
-			
-		}
-		catch(BadRequestException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);			
-		}
-		catch(NotFoundException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);	
-		}
-		catch(NotAcceptableException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseErro);
-		}
-		catch(UnauthorizedException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
-		}
-		catch(Exception e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
-		}
-						
-		return ResponseEntity.ok(responseMensagem);		
-	}
-	
-	@RequestMapping(value="/rfid/{rfid}", method=RequestMethod.GET, headers = "X-API-Version=v2")
-	public ResponseEntity<?> obterUsuarioPorRFID_versao2(
-			@RequestHeader(value="zone") String zone, @PathVariable String rfid,
-			HttpServletRequest request, HttpServletResponse response) {
-		
-		Response<ErroDto> responseErro = new Response<ErroDto>();
-		StringBuilder data = new StringBuilder("{ \"data\": {");
-		
-		try {
-			
-			if(request.getAttribute("codigo_porta") == null) {
-				throw new BadRequestException("Código da porta não informado");
-			}
-			
-			Long codigo_porta = Long.parseLong(request.getAttribute("codigo_porta").toString());
-			
-			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
-			
-			Optional<Usuario> usuario = obterUsuario(rfid);
-			
-			Porta porta = obterPorta(codigo_porta);
-			
-			if(autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora) == false) {
-				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
-			}
-			
-			int[] audio = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
-			
-			String nome = (usuario.get().getPessoa() != null && Strings.isNotEmpty(usuario.get().getPessoa().getNome()) 
-					? usuario.get().getPessoa().getNome() : "");
-				
-			data.append("\"nome\": \"").append(nome).append("\",");
-						
-			if(audio != null && audio.length > 0) {
-								
-				//tamanho de cada array: 1466
-				int contador_array = 1;
-				int tamanho_final;
-				String concatenador = "";
-				for(int i = 0; i < audio.length; i+=1466) {
-					
-					if((1466*contador_array) > audio.length) {
-						tamanho_final = audio.length;
-					}
-					else {
-						tamanho_final = 1466 * contador_array;
-					}
-										
-					data.append(concatenador).append("\"audio").append(String.valueOf(contador_array)).append("\":").append(Arrays.toString(Arrays.copyOfRange(audio, i, tamanho_final-1)));					
-					concatenador = ",";
-					contador_array++;					
-				}				
-			}
-						
-		}
-		catch(BadRequestException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);			
-		}
-		catch(NotFoundException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);	
-		}
-		catch(NotAcceptableException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseErro);
-		}
-		catch(UnauthorizedException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
-		}
-		catch(Exception e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
-		}
-			
-		data.append("}}");
-		return ResponseEntity.ok(data.toString());		
-	}
 	
 	@RequestMapping(value="/autenticacaoSenha", method=RequestMethod.POST)
-	public ResponseEntity<?> autenticacaoPorSenhaDigitada(@RequestHeader(value="zone") String zone,
+	public ResponseEntity autenticacaoPorSenhaDigitada(@RequestHeader(value="zone") String zone,
 			HttpServletRequest request, HttpServletResponse response,
 			@Valid @RequestBody AutenticacaoSenhaDto autenticacaoSenha) {
 		
-		Response<ErroDto> responseErro = new Response<ErroDto>();
-		Response<UsuarioAcessoDto> responseMensagem = new Response<UsuarioAcessoDto>();
+		Response<ErroDto> responseErro = new Response<>();
+		Response<UsuarioAcessoDto> responseMensagem = new Response<>();
 		
 		try {
 			
-			if(request.getAttribute("codigo_porta") == null) {
+			if(request.getAttribute(CODIGO_PORTA) == null) {
 				throw new BadRequestException("Código da porta não informado");
 			}
 			
-			Long codigo_porta = Long.parseLong(request.getAttribute("codigo_porta").toString());
+			Long codigoPorta = Long.parseLong(request.getAttribute(CODIGO_PORTA).toString());
 			
 			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
 			
 			Optional<Usuario> usuario = obterUsuario(Conversao.convertHexToDecimal(autenticacaoSenha.getRfid(), true));
 			
-			Porta porta = obterPorta(codigo_porta);
+			Porta porta = obterPorta(codigoPorta);
 			
-			if(autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora) == false) {
+			if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
 				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
 			}
 			
 			PasswordEncoder pass = new BCryptPasswordEncoder();
 			
-			if(pass.matches(autenticacaoSenha.getSenha(), usuario.get().getSenhaTeclado()) == false) {
+			if(!pass.matches(autenticacaoSenha.getSenha(), usuario.get().getSenhaTeclado())) {
 				throw new UnauthorizedException("Senha incorreta");
 			}
 							
@@ -323,116 +176,56 @@ public class UsuarioControle {
 		
 		return ResponseEntity.ok(responseMensagem);			
 	}
-	
-	@RequestMapping(value="/confirmacaoAcesso/{rfid}", method=RequestMethod.POST)
-	public ResponseEntity<?> confirmacaoAcesso(
-			@RequestHeader(value="zone") String zone, @PathVariable String rfid, 
-			HttpServletRequest request, HttpServletResponse response) {
-		
-		Response<ErroDto> responseErro = new Response<ErroDto>();
-		Response<MensagemDto> responseMensagem = new Response<MensagemDto>();
-		
-		try {
 			
-			if(request.getAttribute("codigo_porta") == null) {
-				throw new BadRequestException("Código da porta não informado");
-			}
-			
-			Long codigo_porta = Long.parseLong(request.getAttribute("codigo_porta").toString());
-			
-			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
-			
-			Optional<Usuario> usuario = obterUsuario(rfid);
-			
-			Porta porta = obterPorta(codigo_porta);
-			
-			logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
-						
-			responseMensagem.setData(new MensagemDto("Log registrado"));
-			
-		}
-		catch(BadRequestException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);			
-		}
-		catch(NotFoundException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);	
-		}
-		catch(NotAcceptableException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseErro);
-		}
-		catch(UnauthorizedException e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
-		}
-		catch(Exception e) {
-			responseErro.setData(new ErroDto(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
-		}
-		
-		return ResponseEntity.ok(responseMensagem);	
-	}
-	
 	@RequestMapping(value="/audio", method=RequestMethod.POST)
-	public ResponseEntity<?> validarAudio(@RequestHeader(value="zone") String zone,
+	public ResponseEntity validarAudio(@RequestHeader(value="zone") String zone,
 			HttpServletRequest request, HttpServletResponse response,
 			@Valid @RequestBody AudioDto audioDto) {
 		
-		Response<ErroDto> responseErro = new Response<ErroDto>();
-		Response<UsuarioAcessoDto> responseMensagem = new Response<UsuarioAcessoDto>();
+		Response<ErroDto> responseErro = new Response<>();
+		Response<UsuarioAcessoDto> responseMensagem = new Response<>();
 		
 		try {
 			
-			if(request.getAttribute("codigo_porta") == null) {
+			if(request.getAttribute(CODIGO_PORTA) == null) {
 				throw new BadRequestException("Código da porta não informado");
 			}
 			
-			Long codigo_porta = Long.parseLong(request.getAttribute("codigo_porta").toString());
+			Long codigoPorta = Long.parseLong(request.getAttribute(CODIGO_PORTA).toString());
 			
 			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
 			
 			Optional<Usuario> usuario = obterUsuario(Conversao.convertHexToDecimal(audioDto.getRfid(), true));
 			
-			Porta porta = obterPorta(codigo_porta);
+			Porta porta = obterPorta(codigoPorta);
 			
-			if(autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora) == false) {
+			if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
 				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
 			}
 			
-			Parametro par_tolerancia = parametrosRepositorio.findOne("TOLERANCIA");
+			Parametro parametroTolerancia = parametrosRepositorio.findOne("TOLERANCIA");
 			double tolerancia = 0.0;
 			
-			if(par_tolerancia != null && Strings.isNotEmpty(par_tolerancia.getValor())) {
+			if(parametroTolerancia != null && Strings.isNotEmpty(parametroTolerancia.getValor())) {
 				
-				if(par_tolerancia.getValor().contains(",")) {
-					par_tolerancia.setValor(par_tolerancia.getValor().replace(",", "."));
-				}
-				
-				try {
-					tolerancia = Double.valueOf(par_tolerancia.getValor());
-				}
-				catch(Exception e) {
-					throw new Exception("Erro ao converter o tipo do parâmetro de tolerância");
-				}
+				tolerancia = Conversao.stringToDouble(parametroTolerancia.getValor(), "Erro ao converter o tipo do parâmetro de tolerância");				
+			}
+
+			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
+			
+			int[] bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
+			
+			boolean validacao = false;			
+			try {
+				validacao = Algorithm.validate(tolerancia, bufferDatabase, bufferRecebido);
+			}
+			catch(ArrayIndexOutOfBoundsException e) {
+				throw new Exception("Erro ao validar áudio");
 			}
 			
-//			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
-//			
-//			int[] bufferRecebido = null;
-//			try {				
-//				bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
-//			}
-//			catch(Exception e) {
-//				throw new Exception("Erro ao converter o tipo do áudio recebido");
-//			}
-//			
-//			boolean validacao = Algorithm.validate(tolerancia, bufferDatabase, bufferRecebido);
-//			
-//			if(validacao == false) {
-//				throw new UnauthorizedException("Senha falada não confere");
-//			}
+			if(!validacao) {
+				throw new UnauthorizedException("Senha falada não confere");
+			}
 			
 			logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
 						

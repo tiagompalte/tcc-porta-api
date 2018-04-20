@@ -12,8 +12,6 @@ public class AutenticacaoSenhaDto {
 	@NotNull(message = "Senha não informada")
 	@NotEmpty(message = "Senha não pode ser vazia")
 	private String senha;
-
-	public AutenticacaoSenhaDto() {}
 	
 	public String getRfid() {
 		return rfid;

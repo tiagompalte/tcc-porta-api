@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt" xmlns="http://www.w3.org/1999/xhtml" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Porta Eletrônica API</title>
+
+    <link rel="stylesheet" type="text/css" th:href="@{/stylesheets/bootstrap.min.css}"/>        
+    <link rel="stylesheet" type="text/css" th:href="@{/stylesheets/algaworks.min.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/stylesheets/vendors.min.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/stylesheets/loader.css}"/>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body onload="myFunction()" style="margin:0;">
+
+		<div id="loader"></div>
+	
+		<div style="display:none;" id="myDiv" class="animate-bottom">
+	        <div class="container">
+				<h1>VOILÀ!</h1>
+                <h3>Porta Eletrônica API no ar</h3>
+                <p>Sistema de segurança baseado em reconhecimento de senha falada</p>
+	        </div>
+	
+	        <footer>
+	            <div class="container-fluid">
+					<span class="aw-footer-disclaimer">2018 <a href="https://portaeletronica.herokuapp.com/">Porta Eletrônica</a></span>
+				</div>
+	        </footer>
+		</div>
+</body>
+
+    <!-- jQuery -->
+    <script th:src="@{/javascript/jquery.js}"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script th:src="@{/javascript/bootstrap.js}"></script>
+    
+    <script>
+		var myVar;
+		
+		function myFunction() {
+		    myVar = setTimeout(showPage, 3000);
+		}
+		
+		function showPage() {
+		  document.getElementById("loader").style.display = "none";
+		  document.getElementById("myDiv").style.display = "block";
+		}
+	</script>
+</body>
+</html>

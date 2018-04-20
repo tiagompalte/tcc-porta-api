@@ -38,7 +38,6 @@ public class AutenticacaoControle {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AutenticacaoControle.class);
 	private static final String TOKEN_HEADER = "authorization";
 	private static final String BEARER_PREFIX = "Bearer";
-	//private static final String CHAVE = "AzSJFHSJFBSJFHSJ";
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
@@ -58,10 +57,10 @@ public class AutenticacaoControle {
 	 * @throws AuthenticationException
 	 */
 	@PostMapping
-	public ResponseEntity<Response<?>> gerarTokenJwt(@Valid @RequestBody JwtAuthenticationDto authenticationDto,
-			BindingResult result) throws AuthenticationException {
+	public ResponseEntity<Response> gerarTokenJwt(@Valid @RequestBody JwtAuthenticationDto authenticationDto,
+			BindingResult result) {
 		
-		Response<ErroDto> responseErro = new Response<ErroDto>();
+		Response<ErroDto> responseErro = new Response<>();
 		ErroDto erro = new ErroDto();
 
 		if (result.hasErrors()) {
@@ -70,16 +69,7 @@ public class AutenticacaoControle {
 			responseErro.setData(erro);
 			return ResponseEntity.badRequest().body(responseErro);
 		}
-		
-//		try {
-//			authenticationDto.setSenha(Criptografia.decode(authenticationDto.getSenha(), CHAVE));
-//		}
-//		catch(Exception e) {			
-//			erro.setErrors(Arrays.asList(e.getMessage()));
-//			responseErro.setData(erro);
-//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
-//		}
-				
+						
 		try {			
 			LOGGER.info("Gerando token para a porta de código {}.", authenticationDto.getCodigo());
 			Authentication authentication = authenticationManager.authenticate(
@@ -95,7 +85,7 @@ public class AutenticacaoControle {
 		UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationDto.getCodigo());
 		String token = jwtTokenUtil.obterToken(userDetails);
 		
-		Response<TokenDto> responseToken = new Response<TokenDto>();
+		Response<TokenDto> responseToken = new Response<>();
 		responseToken.setData(new TokenDto(token));
 		return ResponseEntity.ok(responseToken);
 	}
@@ -107,9 +97,9 @@ public class AutenticacaoControle {
 	 * @return ResponseEntity<Response<?>>
 	 */
 	@PostMapping(value = "/refresh")
-	public ResponseEntity<Response<?>> gerarRefreshTokenJwt(HttpServletRequest request) {
+	public ResponseEntity<Response> gerarRefreshTokenJwt(HttpServletRequest request) {
 		
-		Response<ErroDto> responseErro = new Response<ErroDto>();
+		Response<ErroDto> responseErro = new Response<>();
 		ErroDto erro = new ErroDto();
 		Optional<String> token = Optional.ofNullable(request.getHeader(TOKEN_HEADER));
 
@@ -122,7 +112,7 @@ public class AutenticacaoControle {
 		} 
 		
 		try {
-			if (!jwtTokenUtil.tokenValido(token.get())) {
+			if (token.isPresent() && !jwtTokenUtil.tokenValido(token.get())) {
 				erro.addError("Token inválido ou expirado.");
 			}
 		}
@@ -137,9 +127,9 @@ public class AutenticacaoControle {
 			return ResponseEntity.badRequest().body(responseErro);
 		}
 
-		Response<TokenDto> responseToken = new Response<TokenDto>();
+		Response<TokenDto> responseToken = new Response<>();
 		try {
-			String refreshedToken = jwtTokenUtil.refreshToken(token.get());
+			String refreshedToken = jwtTokenUtil.refreshToken(token.isPresent() ? token.get() : null);
 			responseToken.setData(new TokenDto(refreshedToken));
 		}
 		catch(Exception e) {

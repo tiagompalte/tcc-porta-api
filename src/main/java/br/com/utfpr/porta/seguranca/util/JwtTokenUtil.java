@@ -27,15 +27,8 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return String
 	 */
-	public String getUsernameFromToken(String token) throws Exception {
-		String username;
-		try {
-			Claims claims = getClaimsFromToken(token);
-			username = claims.getSubject();
-		} catch (Exception e) {
-			throw new Exception("Erro ao obter código da porta. ".concat(e.getMessage()));
-		}
-		return username;
+	public String getUsernameFromToken(String token) {
+		return getClaimsFromToken(token).getSubject();
 	}
 
 	/**
@@ -44,9 +37,8 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return Date
 	 */
-	public Date getExpirationDateFromToken(String token) throws Exception {
-		Claims claims = getClaimsFromToken(token);
-		return claims.getExpiration();
+	public Date getExpirationDateFromToken(String token) {
+		return getClaimsFromToken(token).getExpiration();
 	}
 
 	/**
@@ -55,16 +47,10 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return String
 	 */
-	public String refreshToken(String token) throws Exception{
-		String refreshedToken;
-		try {
-			Claims claims = getClaimsFromToken(token);
-			claims.put(CLAIM_KEY_CREATED, new Date());
-			refreshedToken = gerarToken(claims);
-		} catch (Exception e) {
-			throw new Exception("Erro ao realizar refresh no token. ".concat(e.getMessage()));
-		}
-		return refreshedToken;
+	public String refreshToken(String token) {
+		Claims claims = getClaimsFromToken(token);
+		claims.put(CLAIM_KEY_CREATED, new Date());
+		return gerarToken(claims);
 	}
 
 	/**
@@ -73,7 +59,7 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return boolean
 	 */
-	public boolean tokenValido(String token) throws Exception {
+	public boolean tokenValido(String token) {
 		return !tokenExpirado(token);
 	}
 
@@ -98,14 +84,8 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return Claims
 	 */
-	private Claims getClaimsFromToken(String token) throws Exception {
-		Claims claims;
-		try {
-			claims = Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token).getBody();
-		} catch (Exception e) {
-			throw new Exception("Erro ao realizar o parse do token JWT. ".concat(e.getMessage()));
-		}
-		return claims;
+	private Claims getClaimsFromToken(String token) {
+		return Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token).getBody();
 	}
 
 	/**
@@ -123,7 +103,7 @@ public class JwtTokenUtil {
 	 * @param token
 	 * @return boolean
 	 */
-	private boolean tokenExpirado(String token) throws Exception {
+	private boolean tokenExpirado(String token) {
 		Date dataExpiracao = this.getExpirationDateFromToken(token);
 		return dataExpiracao.before(new Date());
 	}

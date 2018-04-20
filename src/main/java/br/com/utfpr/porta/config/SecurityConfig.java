@@ -41,7 +41,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 	@Bean
-	public JwtAuthenticationTokenFilter authenticationTokenFilterBean() throws Exception {
+	public JwtAuthenticationTokenFilter authenticationTokenFilterBean() {
 		return new JwtAuthenticationTokenFilter();
 	}
 
@@ -58,7 +58,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	public void configure(WebSecurity web) throws Exception {
 		web.ignoring()
 			.antMatchers("/token/**")
-			.antMatchers("/");
+			.antMatchers("/")
+			.antMatchers("/stylesheets/**")
+			.antMatchers("/javascript/**");
 	}
 	
 	@Bean(name = BeanIds.AUTHENTICATION_MANAGER)
