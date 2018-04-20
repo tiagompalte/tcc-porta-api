@@ -215,7 +215,13 @@ public class UsuarioControle {
 			
 			int[] bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
 			
-			boolean validacao = Algorithm.validate(tolerancia, bufferDatabase, bufferRecebido);
+			boolean validacao = false;			
+			try {
+				validacao = Algorithm.validate(tolerancia, bufferDatabase, bufferRecebido);
+			}
+			catch(ArrayIndexOutOfBoundsException e) {
+				throw new Exception("Erro ao validar áudio");
+			}
 			
 			if(!validacao) {
 				throw new UnauthorizedException("Senha falada não confere");
