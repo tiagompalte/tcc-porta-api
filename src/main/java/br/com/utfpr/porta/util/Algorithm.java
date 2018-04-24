@@ -23,9 +23,9 @@ public class Algorithm {
 	}
 	
 	private static int[] zeroFill (int[] buffer) {
-		int[] bufferZ = new int[NUM_AMOSTRAS + 2*DELAY_MAX];
+		int[] bufferZ = new int[buffer.length + 2*DELAY_MAX];
 		
-		for (int i=DELAY_MAX; i<NUM_AMOSTRAS + DELAY_MAX; i++) {
+		for (int i=DELAY_MAX; i<buffer.length + DELAY_MAX; i++) {
 			bufferZ[i] = buffer[i - DELAY_MAX];
 		}
 		
@@ -36,7 +36,7 @@ public class Algorithm {
 		
 		float rAuto = 0;
 
-		for (int n = 0; n < (NUM_AMOSTRAS + 2*DELAY_MAX) - 1; n++) {
+		for (int n = 0; n < (buffer.length + 2*DELAY_MAX) - 1; n++) {
 			rAuto += (buffer[n]*buffer[n])/255;
 		}
 		
@@ -47,14 +47,28 @@ public class Algorithm {
 		
 		float[] rCross = new float[2*DELAY_MAX + 1];
 		
-		for (int k = -DELAY_MAX; k <= DELAY_MAX; k++) {
-			if (k <= 0) {
-				for (int n = 0; n < (NUM_AMOSTRAS + 2*DELAY_MAX + k); n++) {
-					rCross[DELAY_MAX + k] += (bufferDatabase[n]*bufferRecebido[n-k])/255;
+		if (bufferDatabase.length <= bufferRecebido.length) {
+			for (int k = -DELAY_MAX; k <= DELAY_MAX; k++) {
+				if (k <= 0) {
+					for (int n = 0; n < (bufferDatabase.length + 2*DELAY_MAX + k); n++) {
+						rCross[DELAY_MAX + k] += (bufferDatabase[n]*bufferRecebido[n-k])/255;
+					}
+				} else {
+					for (int n = 0; n < (bufferDatabase.length + 2*DELAY_MAX - k); n++) {
+						rCross[DELAY_MAX + k] += (bufferDatabase[n+k]*bufferRecebido[n])/255;
+					}
 				}
-			} else {
-				for (int n = 0; n < (NUM_AMOSTRAS + 2*DELAY_MAX - k); n++) {
-					rCross[DELAY_MAX + k] += (bufferDatabase[n+k]*bufferRecebido[n])/255;
+			}
+		} else {
+			for (int k = -DELAY_MAX; k <= DELAY_MAX; k++) {
+				if (k <= 0) {
+					for (int n = 0; n < (bufferRecebido.length + 2*DELAY_MAX + k); n++) {
+						rCross[DELAY_MAX + k] += (bufferDatabase[n]*bufferRecebido[n-k])/255;
+					}
+				} else {
+					for (int n = 0; n < (bufferRecebido.length + 2*DELAY_MAX - k); n++) {
+						rCross[DELAY_MAX + k] += (bufferDatabase[n+k]*bufferRecebido[n])/255;
+					}
 				}
 			}
 		}
