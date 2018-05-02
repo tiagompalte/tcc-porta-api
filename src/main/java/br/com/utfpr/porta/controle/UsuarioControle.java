@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.apache.logging.log4j.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,6 +67,8 @@ public class UsuarioControle {
 	private Parametros parametrosRepositorio;
 	
 	private static final String CODIGO_PORTA = "codigo_porta";
+	
+	private static final Logger LOG = LoggerFactory.getLogger(UsuarioControle.class);
 		
 	private LocalDateTime converterZoneParaLocalDateTime(String zone) {	
 		
@@ -185,7 +189,7 @@ public class UsuarioControle {
 		Response<ErroDto> responseErro = new Response<>();
 		Response<UsuarioAcessoDto> responseMensagem = new Response<>();
 		
-		try {
+		try {					
 			
 			if(request.getAttribute(CODIGO_PORTA) == null) {
 				throw new BadRequestException("Codigo da porta nao informado");
@@ -213,6 +217,8 @@ public class UsuarioControle {
 			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
 			
 			int[] bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
+			
+			LOG.info("Tamanho do audio: {}", bufferRecebido.length);
 			
 			boolean validacao = Algorithm.validate(tolerancia, bufferDatabase, bufferRecebido);
 			
