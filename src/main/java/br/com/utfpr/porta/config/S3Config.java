@@ -17,8 +17,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 
 @Configuration
-//@PropertySource(value = { "file://${HOME}/.porta-s3.properties" }, ignoreResourceNotFound = true) //MAC
-@PropertySource(value = { "file:\\${USERPROFILE}\\.porta-s3.properties" }, ignoreResourceNotFound = true) //WINDOWS
+@PropertySource(value = { "file:\\${USERPROFILE}\\.porta-s3.properties", "file://${HOME}/.porta-s3.properties" }, ignoreResourceNotFound = true)
 public class S3Config {
 	
 	@Autowired
