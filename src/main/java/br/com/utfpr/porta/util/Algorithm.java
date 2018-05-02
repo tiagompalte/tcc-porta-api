@@ -75,17 +75,23 @@ public class Algorithm {
 		return max(2*DELAY_MAX + 1, rCross);
 	}
 		
-	public static boolean validate(double tolerancia, int[] bufferDatabase, int[] bufferRecebido) {
-		int[] bufferDatabaseZ = zeroFill(bufferDatabase);
-		int[] bufferRecebidoZ = zeroFill(bufferRecebido);
+	public static boolean validate(double tolerancia, int[] bufferDatabase, int[] bufferRecebido) throws Exception {
 		
-		float auto1 = autoCorr(bufferDatabaseZ);
-		float auto2 = autoCorr(bufferRecebidoZ);
-		float cross12 = crossCorr(bufferDatabaseZ, bufferRecebidoZ);
-
-		double coef = cross12 / Math.sqrt(auto1*auto2);
-		
-		return coef >= (1 - tolerancia);
+		try {			
+			int[] bufferDatabaseZ = zeroFill(bufferDatabase);
+			int[] bufferRecebidoZ = zeroFill(bufferRecebido);
+			
+			float auto1 = autoCorr(bufferDatabaseZ);
+			float auto2 = autoCorr(bufferRecebidoZ);
+			float cross12 = crossCorr(bufferDatabaseZ, bufferRecebidoZ);
+			
+			double coef = cross12 / Math.sqrt(auto1*auto2);
+			
+			return coef >= (1 - tolerancia);
+		}
+		catch(ArrayIndexOutOfBoundsException e) {
+			throw new Exception("Erro ao validar audio");
+		}
 	}
 
 }

@@ -40,7 +40,12 @@ public class AudioTest {
 	@Test
 	public void validarAudio() {
 		
-		boolean validacao = Algorithm.validate(0.25, bufferDatabase, bufferRecebido);
+		boolean validacao = false;
+		try {
+			validacao = Algorithm.validate(0.25, bufferDatabase, bufferRecebido);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		assertTrue(validacao);
 	}
