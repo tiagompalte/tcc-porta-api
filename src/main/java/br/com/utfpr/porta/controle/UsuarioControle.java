@@ -69,7 +69,7 @@ public class UsuarioControle {
 	private LocalDateTime converterZoneParaLocalDateTime(String zone) {	
 		
 		if(Strings.isEmpty(zone)) {
-			throw new BadRequestException("Zona local não informada");
+			throw new BadRequestException("Zona local nao informada");
 		}
 		
 		LocalDateTime dataHora;		
@@ -85,21 +85,21 @@ public class UsuarioControle {
 	private Optional<Usuario> obterUsuario(String rfid) {
 		
 		if(Strings.isEmpty(rfid)) {
-			throw new BadRequestException("RFID não informado");
+			throw new BadRequestException("RFID nao informado");
 		}
 		
 		Optional<Usuario> usuario = usuariosRepositorio.findByRfid(rfid);
 		
 		if(!usuario.isPresent()) {
-			throw new NotFoundException("Usuário não encontrado");
+			throw new NotFoundException("Usuario nao encontrado");
 		}
 		
 		if(!usuario.get().getAtivo()) {
-			throw new NotAcceptableException("Usuário inativo");
+			throw new NotAcceptableException("Usuario inativo");
 		}
 		
 		if(Strings.isEmpty(usuario.get().getNomeAudio())) {
-			throw new NotFoundException("Usuário sem áudio cadastrado");
+			throw new NotFoundException("Usuario sem audio cadastrado");
 		}
 		
 		return usuario;		
@@ -110,7 +110,7 @@ public class UsuarioControle {
 		Porta porta = portasRepositorio.findOne(codigoPorta);
 		
 		if(porta == null) {
-			throw new NotFoundException("Porta não encontrada");
+			throw new NotFoundException("Porta nao encontrada");
 		}
 		
 		return porta;
@@ -127,7 +127,7 @@ public class UsuarioControle {
 		try {
 			
 			if(request.getAttribute(CODIGO_PORTA) == null) {
-				throw new BadRequestException("Código da porta não informado");
+				throw new BadRequestException("Codigo da porta nao informado");
 			}
 			
 			Long codigoPorta = Long.parseLong(request.getAttribute(CODIGO_PORTA).toString());
@@ -139,7 +139,7 @@ public class UsuarioControle {
 			Porta porta = obterPorta(codigoPorta);
 			
 			if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
-				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
+				throw new UnauthorizedException("Usuario sem autorizacao para acesso a porta desejada");
 			}
 			
 			PasswordEncoder pass = new BCryptPasswordEncoder();
@@ -188,7 +188,7 @@ public class UsuarioControle {
 		try {
 			
 			if(request.getAttribute(CODIGO_PORTA) == null) {
-				throw new BadRequestException("Código da porta não informado");
+				throw new BadRequestException("Codigo da porta nao informado");
 			}
 			
 			Long codigoPorta = Long.parseLong(request.getAttribute(CODIGO_PORTA).toString());
@@ -200,31 +200,24 @@ public class UsuarioControle {
 			Porta porta = obterPorta(codigoPorta);
 			
 			if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
-				throw new UnauthorizedException("Usuário sem autorização para acesso a porta desejada");
+				throw new UnauthorizedException("Usuario sem autorizacao para acesso a porta desejada");
 			}
 			
 			Parametro parametroTolerancia = parametrosRepositorio.findOne("TOLERANCIA");
 			double tolerancia = 0.0;
 			
-			if(parametroTolerancia != null && Strings.isNotEmpty(parametroTolerancia.getValor())) {
-				
-				tolerancia = Conversao.stringToDouble(parametroTolerancia.getValor(), "Erro ao converter o tipo do parâmetro de tolerância");				
+			if(parametroTolerancia != null && Strings.isNotEmpty(parametroTolerancia.getValor())) {				
+				tolerancia = Conversao.stringToDouble(parametroTolerancia.getValor(), "Erro ao converter o tipo do parametro de tolerancia");				
 			}
 			
 			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
 			
 			int[] bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
 			
-			boolean validacao = false;			
-			try {
-				validacao = Algorithm.validate(tolerancia, bufferDatabase, bufferRecebido);
-			}
-			catch(ArrayIndexOutOfBoundsException e) {
-				throw new Exception("Erro ao validar áudio");
-			}
+			boolean validacao = Algorithm.validate(tolerancia, bufferDatabase, bufferRecebido);
 			
 			if(!validacao) {
-				throw new UnauthorizedException("Senha falada não confere");
+				throw new UnauthorizedException("Senha falada nao confere");
 			}
 			
 			logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
