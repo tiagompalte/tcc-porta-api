@@ -3,26 +3,39 @@ package br.com.utfpr.porta.config;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import br.com.utfpr.porta.modelo.Parametro;
+import br.com.utfpr.porta.repositorio.Parametros;
 
 @Component
 public class ScheduledTasks {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTasks.class);
-	
-	private static final String URL = "http://portaeletronica-api.herokuapp.com";
+		
+	@Autowired
+	private Parametros parametroRepositorio;
 		
 	/**
 	 * Tarefa que executa a cada 25 minutos para a aplicação não hibernar
 	 */
     @Scheduled(initialDelay = 0, fixedDelay = 1500000) //25 minutos
     public void heyApiNaoDurma() {
+    	
+    		Parametro parUrlApi = parametroRepositorio.findOne("URL_API");
+		
+		if(parUrlApi == null || Strings.isEmpty(parUrlApi.getValor())) {
+			LOGGER.error("Erro no ping no serviço API: Parâmetro URL_API não cadastrado");
+			return;
+		}
 				
 		try {
-			URL obj = new URL(URL);
+			URL obj = new URL(parUrlApi.getValor());
 			HttpURLConnection con;
 			int responseCode = 0;
 			int tentativas = 0;
@@ -31,7 +44,8 @@ public class ScheduledTasks {
 				con.setRequestMethod("GET");
 				con.setRequestProperty("User-Agent", "Mozilla/5.0");			
 				responseCode = con.getResponseCode();
-				tentativas++;				
+				tentativas++;
+				LOGGER.info("Ping no serviço de API: Tentativa: ".concat(String.valueOf(tentativas).concat(" Resposta: ").concat(String.valueOf(responseCode))));
 				Thread.sleep(3000);
 			}
 			while(responseCode != HttpURLConnection.HTTP_OK && tentativas < 10);
