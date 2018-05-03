@@ -1,9 +1,13 @@
 package br.com.utfpr.porta.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Algorithm {
 
 	private static final int NUM_AMOSTRAS = 22000; // 1.5*16000
 	private static final int DELAY_MAX = 1600;
+	private static final Logger LOG = LoggerFactory.getLogger(Algorithm.class);
 
 	private Algorithm() {
 		throw new IllegalStateException("Utility class");
@@ -73,6 +77,8 @@ public class Algorithm {
 			float cross12 = crossCorr(bufferDatabaseZ, bufferRecebidoZ);
 			
 			double coef = cross12 / Math.sqrt(auto1 * auto2);
+			
+			LOG.info("Coeficiente: {}", coef);
 			
 			return coef >= (1 - tolerancia);
 		}
