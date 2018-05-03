@@ -156,24 +156,31 @@ public class UsuarioControle {
 						
 			responseMensagem.setData(new UsuarioAcessoDto("Autorizado", usuario.get().getPessoa().getNome()));
 			
+			LOG.info("Usuário {} acesso com senha digitada na porta {}", usuario.get().getCodigoNome(), porta.getCodigoDescricao());
+			
 		}
 		catch(BadRequestException e) {
+			LOG.error(e.getMessage());
 			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);			
 		}
 		catch(NotFoundException e) {
+			LOG.error(e.getMessage());
 			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);	
 		}
 		catch(NotAcceptableException e) {
+			LOG.error(e.getMessage());
 			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseErro);
 		}
 		catch(UnauthorizedException e) {
+			LOG.error(e.getMessage());
 			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
 		catch(Exception e) {
+			LOG.error(e.getMessage());
 			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
@@ -230,24 +237,31 @@ public class UsuarioControle {
 						
 			responseMensagem.setData(new UsuarioAcessoDto("Autorizado", usuario.get().getPessoa().getNome()));
 			
+			LOG.info("Usuário {} acesso com senha falada na porta {}", usuario.get().getCodigoNome(), porta.getCodigoDescricao());
+			
 		}
 		catch(BadRequestException e) {
+			LOG.error(e.getMessage());
 			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);			
 		}
 		catch(NotFoundException e) {
+			LOG.error(e.getMessage());
 			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);	
 		}
 		catch(NotAcceptableException e) {
+			LOG.error(e.getMessage());
 			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseErro);
 		}
 		catch(UnauthorizedException e) {
+			LOG.error(e.getMessage());
 			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
 		catch(Exception e) {
+			LOG.error(e.getMessage());
 			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
