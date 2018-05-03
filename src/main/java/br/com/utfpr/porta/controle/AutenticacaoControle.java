@@ -77,6 +77,7 @@ public class AutenticacaoControle {
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 		catch(Exception e) {
+			LOGGER.error(e.getMessage());
 			erro.addError(e.getMessage());
 			responseErro.setData(erro);
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
@@ -133,6 +134,7 @@ public class AutenticacaoControle {
 			responseToken.setData(new TokenDto(refreshedToken));
 		}
 		catch(Exception e) {
+			LOGGER.error(e.getMessage());
 			erro.addError(e.getMessage());
 			responseErro.setData(erro);
 			return ResponseEntity.badRequest().body(responseErro);
