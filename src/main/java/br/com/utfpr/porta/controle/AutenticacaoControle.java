@@ -11,9 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -27,7 +27,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import br.com.utfpr.porta.response.Response;
 import br.com.utfpr.porta.seguranca.dto.ErroDto;
 import br.com.utfpr.porta.seguranca.dto.JwtAuthenticationDto;
+import br.com.utfpr.porta.seguranca.dto.PortaJwtAuthenticationDto;
 import br.com.utfpr.porta.seguranca.dto.TokenDto;
+import br.com.utfpr.porta.seguranca.dto.UsuarioJwtAuthenticationDto;
 import br.com.utfpr.porta.seguranca.util.JwtTokenUtil;
 
 @Controller
@@ -47,50 +49,96 @@ public class AutenticacaoControle {
 
 	@Autowired
 	private UserDetailsService userDetailsService;
-
+	
+	private String gerarTokenJwt(JwtAuthenticationDto authenticationDto) {
+		
+		Authentication authentication = authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(authenticationDto.getId(), authenticationDto.getSenha()));
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+		UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationDto.getId());
+		return jwtTokenUtil.obterToken(userDetails);		
+	}
+	
 	/**
-	 * Gera e retorna um novo token JWT.
-	 * 
-	 * @param authenticationDto
+	 * Gerar token para acesso das portas
+	 * @param portaJwtDto
 	 * @param result
-	 * @return ResponseEntity<Response<?>>
-	 * @throws AuthenticationException
+	 * @return
 	 */
-	@PostMapping
-	public ResponseEntity<Response> gerarTokenJwt(@Valid @RequestBody JwtAuthenticationDto authenticationDto,
-			BindingResult result) {
+	@PostMapping("/porta")
+	public ResponseEntity<Response> gerarTokenJwtPorta(@Valid @RequestBody PortaJwtAuthenticationDto portaJwtDto, BindingResult result) {
 		
 		Response<ErroDto> responseErro = new Response<>();
 		ErroDto erro = new ErroDto();
 
 		if (result.hasErrors()) {
-			LOGGER.error("Erro validando lançamento: {}", result.getAllErrors());
+			LOGGER.error("Erro validando JWT Porta: {}", result.getAllErrors());
 			result.getAllErrors().forEach(error -> erro.addError(error.getDefaultMessage()));
 			responseErro.setData(erro);
 			return ResponseEntity.badRequest().body(responseErro);
 		}
-						
+			
+		String token = "";
 		try {			
-			LOGGER.info("Gerando token para a porta de código {}.", authenticationDto.getCodigo());
-			Authentication authentication = authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(authenticationDto.getCodigo(), authenticationDto.getSenha()));
-			SecurityContextHolder.getContext().setAuthentication(authentication);
+			token = gerarTokenJwt(portaJwtDto);
+		}
+		catch(BadCredentialsException e) {
+			LOGGER.error(e.getMessage());
+			responseErro.setData(new ErroDto("Código e/ou senha não conferem"));
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
 		catch(Exception e) {
 			LOGGER.error(e.getMessage());
 			erro.addError(e.getMessage());
 			responseErro.setData(erro);
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
-
-		UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationDto.getCodigo());
-		String token = jwtTokenUtil.obterToken(userDetails);
 		
 		Response<TokenDto> responseToken = new Response<>();
 		responseToken.setData(new TokenDto(token));
 		return ResponseEntity.ok(responseToken);
 	}
+	
+	/**
+	 * Gerar token para acesso dos usuários via aplicativo
+	 * @param usuarioJwtDto
+	 * @param result
+	 * @return
+	 */
+	@PostMapping("/usuario")
+	public ResponseEntity<Response> gerarTokenJwtUsuario(@Valid @RequestBody UsuarioJwtAuthenticationDto usuarioJwtDto, BindingResult result) {
+		
+		Response<ErroDto> responseErro = new Response<>();
+		ErroDto erro = new ErroDto();
 
+		if (result.hasErrors()) {
+			LOGGER.error("Erro validando JWT Usuário: {}", result.getAllErrors());
+			result.getAllErrors().forEach(error -> erro.addError(error.getDefaultMessage()));
+			responseErro.setData(erro);
+			return ResponseEntity.badRequest().body(responseErro);
+		}
+			
+		String token = "";
+		try {			
+			token = gerarTokenJwt(usuarioJwtDto);
+		}
+		catch(BadCredentialsException e) {
+			LOGGER.error(e.getMessage());
+			responseErro.setData(new ErroDto("E-mail e/ou senha não conferem"));
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
+		}
+		catch(Exception e) {
+			LOGGER.error(e.getMessage());
+			erro.addError(e.getMessage());
+			responseErro.setData(erro);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
+		}
+		
+		Response<TokenDto> responseToken = new Response<>();
+		responseToken.setData(new TokenDto(token));
+		return ResponseEntity.ok(responseToken);
+	}
+	
 	/**
 	 * Gera um novo token com uma nova data de expiração.
 	 * 
@@ -120,7 +168,7 @@ public class AutenticacaoControle {
 		catch(Exception e) {
 			erro.addError("Token inválido");
 			responseErro.setData(erro);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);
+			return ResponseEntity.badRequest().body(responseErro);
 		}
 
 		if (!erro.getErrors().isEmpty()) {
@@ -135,8 +183,7 @@ public class AutenticacaoControle {
 		}
 		catch(Exception e) {
 			LOGGER.error(e.getMessage());
-			erro.addError(e.getMessage());
-			responseErro.setData(erro);
+			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.badRequest().body(responseErro);
 		}
 
