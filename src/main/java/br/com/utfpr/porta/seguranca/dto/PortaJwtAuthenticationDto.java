@@ -2,8 +2,6 @@ package br.com.utfpr.porta.seguranca.dto;
 
 import javax.validation.constraints.NotNull;
 
-import br.com.utfpr.porta.seguranca.enums.TypeJwt;
-
 public class PortaJwtAuthenticationDto implements JwtAuthenticationDto {
 	
 	@NotNull(message = "Código não informado") 
@@ -33,12 +31,7 @@ public class PortaJwtAuthenticationDto implements JwtAuthenticationDto {
 	public void setSenha(String senha) {
 		this.senha = senha;
 	}
-	
-	@Override
-	public TypeJwt getType() {
-		return TypeJwt.PORTA;
-	}
-	
+		
 	@Override
 	public String toString() {
 		return "PortaJwtAuthenticationDto [codigo=" + codigo + ", senha=" + senha + "]";

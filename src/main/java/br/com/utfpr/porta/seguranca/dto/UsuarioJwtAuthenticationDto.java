@@ -2,8 +2,6 @@ package br.com.utfpr.porta.seguranca.dto;
 
 import javax.validation.constraints.NotNull;
 
-import br.com.utfpr.porta.seguranca.enums.TypeJwt;
-
 public class UsuarioJwtAuthenticationDto implements JwtAuthenticationDto{
 
 	@NotNull(message = "E-mail não informado")
@@ -38,12 +36,7 @@ public class UsuarioJwtAuthenticationDto implements JwtAuthenticationDto{
 	public void setSenha(String senha) {
 		this.senha = senha;
 	}
-	
-	@Override
-	public TypeJwt getType() {
-		return TypeJwt.USUARIO;
-	}
-	
+		
 	@Override
 	public String toString() {
 		return "UsuarioJwtAuthenticationDto [email=" + email + ", senha=" + senha + "]";

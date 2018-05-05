@@ -1,7 +1,5 @@
 package br.com.utfpr.porta.seguranca.dto;
 
-import br.com.utfpr.porta.seguranca.enums.TypeJwt;
-
 public interface JwtAuthenticationDto {
 	
 	public String getId();
@@ -12,7 +10,5 @@ public interface JwtAuthenticationDto {
 	
 	public void setSenha(String senha);
 	
-	public TypeJwt getType();	
-
 }
 
