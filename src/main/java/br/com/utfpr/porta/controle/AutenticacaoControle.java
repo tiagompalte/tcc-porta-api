@@ -24,11 +24,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import br.com.utfpr.porta.controle.dto.ErroDto;
+import br.com.utfpr.porta.controle.dto.TokenDto;
 import br.com.utfpr.porta.response.Response;
-import br.com.utfpr.porta.seguranca.dto.ErroDto;
 import br.com.utfpr.porta.seguranca.dto.JwtAuthenticationDto;
 import br.com.utfpr.porta.seguranca.dto.PortaJwtAuthenticationDto;
-import br.com.utfpr.porta.seguranca.dto.TokenDto;
 import br.com.utfpr.porta.seguranca.dto.UsuarioJwtAuthenticationDto;
 import br.com.utfpr.porta.seguranca.util.JwtTokenUtil;
 

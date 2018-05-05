@@ -34,7 +34,7 @@
 		<jsonwebtoken.version>0.7.0</jsonwebtoken.version>
 		
 		<!-- Porta Serviço -->
-		<portaservico.version>1.0.10</portaservico.version>
+		<portaservico.version>1.0.11</portaservico.version>
 		
 		<!-- Apache Commons DBCP -->
 		<commons-dbcp2.version>2.1.1</commons-dbcp2.version>
