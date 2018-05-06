@@ -1,4 +1,4 @@
-package br.com.utfpr.porta.seguranca.dto;
+package br.com.utfpr.porta.controle.dto;
 
 import java.util.ArrayList;
 import java.util.List;

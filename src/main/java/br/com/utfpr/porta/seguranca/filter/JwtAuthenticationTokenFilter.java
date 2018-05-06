@@ -85,7 +85,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 		}
 		
 		if(username != null) {
-			request.setAttribute("codigo_porta", username);
+			request.setAttribute("username", username);
 		}		
 
 		chain.doFilter(request, response);

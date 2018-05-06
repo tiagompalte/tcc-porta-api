@@ -2,7 +2,9 @@ package br.com.utfpr.porta.controle;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -22,6 +24,11 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import br.com.utfpr.porta.controle.dto.AudioDto;
+import br.com.utfpr.porta.controle.dto.AutenticacaoSenhaDto;
+import br.com.utfpr.porta.controle.dto.ErroDto;
+import br.com.utfpr.porta.controle.dto.UsuarioAcessoDto;
+import br.com.utfpr.porta.controle.dto.UsuarioDto;
 import br.com.utfpr.porta.controle.exception.BadRequestException;
 import br.com.utfpr.porta.controle.exception.NotAcceptableException;
 import br.com.utfpr.porta.controle.exception.NotFoundException;
@@ -33,10 +40,6 @@ import br.com.utfpr.porta.repositorio.Parametros;
 import br.com.utfpr.porta.repositorio.Portas;
 import br.com.utfpr.porta.repositorio.Usuarios;
 import br.com.utfpr.porta.response.Response;
-import br.com.utfpr.porta.seguranca.dto.AudioDto;
-import br.com.utfpr.porta.seguranca.dto.AutenticacaoSenhaDto;
-import br.com.utfpr.porta.seguranca.dto.ErroDto;
-import br.com.utfpr.porta.seguranca.dto.UsuarioAcessoDto;
 import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
 import br.com.utfpr.porta.storage.AudioStorage;
@@ -65,8 +68,9 @@ public class UsuarioControle {
 	
 	@Autowired
 	private Parametros parametrosRepositorio;
-	
-	private static final String CODIGO_PORTA = "codigo_porta";
+		
+	private static final String CODIGO_PORTA = "username";
+	private static final String EMAIL_USUARIO = "username";
 	
 	private static final Logger LOG = LoggerFactory.getLogger(UsuarioControle.class);
 		
@@ -120,6 +124,14 @@ public class UsuarioControle {
 		return porta;
 	}
 	
+	/**
+	 * Autenticação do usuário para acesso a porta por senha digitada
+	 * @param zone
+	 * @param request
+	 * @param response
+	 * @param autenticacaoSenha
+	 * @return usuário autorizado ou não
+	 */
 	@RequestMapping(value="/autenticacaoSenha", method=RequestMethod.POST)
 	public ResponseEntity autenticacaoPorSenhaDigitada(@RequestHeader(value="zone") String zone,
 			HttpServletRequest request, HttpServletResponse response,
@@ -188,6 +200,14 @@ public class UsuarioControle {
 		return ResponseEntity.ok(responseMensagem);			
 	}
 			
+	/**
+	 * Autenticação do usuário para acesso a porta por senha falada
+	 * @param zone
+	 * @param request
+	 * @param response
+	 * @param audioDto
+	 * @return usuário autorizado ou não
+	 */
 	@RequestMapping(value="/audio", method=RequestMethod.POST)
 	public ResponseEntity validarAudio(@RequestHeader(value="zone") String zone,
 			HttpServletRequest request, HttpServletResponse response,
@@ -267,6 +287,53 @@ public class UsuarioControle {
 		}
 		
 		return ResponseEntity.ok(responseMensagem);
+		
+	}
+	
+	@RequestMapping(value="/estabelecimento", method=RequestMethod.GET)
+	public ResponseEntity obterListaUsuariosVinculadosEstabelecimento(HttpServletRequest request) {
+		
+		Response<ErroDto> responseErro = new Response<>();
+		List<UsuarioDto> listDto = null;
+		
+		try {
+			
+			if(request.getAttribute(EMAIL_USUARIO) == null) {
+				throw new BadRequestException("E-mail do usuário nao informado");
+			}
+						
+			Optional<Usuario> usuario = usuariosRepositorio.findByEmail(request.getAttribute(EMAIL_USUARIO).toString());
+			
+			if(!usuario.isPresent()) {
+				throw new NotFoundException("Usuario nao encontrado");
+			}
+			
+			if(usuario.get().getEstabelecimento() == null || usuario.get().getEstabelecimento().getCodigo() == null) {
+				throw new BadRequestException("Usuario nao e responsavel por nenhum estabelecimento");
+			}
+			
+			List<Usuario> listaUsuarios = usuariosRepositorio.obterListaPorVinculoEstabelecimento(usuario.get().getEstabelecimento());
+								
+			listDto = listaUsuarios.stream().map(usr -> new UsuarioDto(usr)).collect(Collectors.toList()); 
+			
+		}
+		catch(BadRequestException e) {
+			LOG.error(e.getMessage());
+			responseErro.setData(new ErroDto(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);			
+		}
+		catch(NotFoundException e) {
+			LOG.error(e.getMessage());
+			responseErro.setData(new ErroDto(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseErro);	
+		}
+		catch(Exception e) {
+			LOG.error(e.getMessage());
+			responseErro.setData(new ErroDto(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
+		}
+		
+		return ResponseEntity.ok().body(listDto);		
 		
 	}
 		

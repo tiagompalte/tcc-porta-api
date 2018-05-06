@@ -45,7 +45,7 @@ public class ScheduledTasks {
 				con.setRequestProperty("User-Agent", "Mozilla/5.0");			
 				responseCode = con.getResponseCode();
 				tentativas++;
-				LOGGER.info("Ping no serviço de API: Tentativa: ".concat(String.valueOf(tentativas).concat(" Resposta: ").concat(String.valueOf(responseCode))));
+				LOGGER.info("Ping no serviço de API: Tentativa: {} Resoista: {}", tentativas, responseCode);
 				Thread.sleep(3000);
 			}
 			while(responseCode != HttpURLConnection.HTTP_OK && tentativas < 10);
