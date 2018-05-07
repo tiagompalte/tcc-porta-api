@@ -104,11 +104,7 @@ public class UsuarioControle {
 		
 		if(!usuario.get().getAtivo()) {
 			throw new NotAcceptableException("Usuario inativo");
-		}
-		
-		if(Strings.isEmpty(usuario.get().getNomeAudio())) {
-			throw new NotFoundException("Usuario sem audio cadastrado");
-		}
+		}			
 		
 		return usuario;		
 	}
@@ -122,6 +118,23 @@ public class UsuarioControle {
 		}
 		
 		return porta;
+	}
+	
+	private Long obterCodigoPorta(HttpServletRequest request) {
+		
+		if(request.getAttribute(CODIGO_PORTA) == null) {
+			throw new BadRequestException("Codigo da porta nao informado");
+		}
+		
+		Long codigoPorta;
+		try {				
+			codigoPorta = Long.parseLong(request.getAttribute(CODIGO_PORTA).toString());
+		}
+		catch(NumberFormatException e) {
+			throw new NotAcceptableException("Você não é uma porta");
+		}
+		
+		return codigoPorta;
 	}
 	
 	/**
@@ -142,11 +155,7 @@ public class UsuarioControle {
 		
 		try {
 			
-			if(request.getAttribute(CODIGO_PORTA) == null) {
-				throw new BadRequestException("Codigo da porta nao informado");
-			}
-			
-			Long codigoPorta = Long.parseLong(request.getAttribute(CODIGO_PORTA).toString());
+			Long codigoPorta = obterCodigoPorta(request);
 			
 			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
 			
@@ -218,11 +227,7 @@ public class UsuarioControle {
 		
 		try {					
 			
-			if(request.getAttribute(CODIGO_PORTA) == null) {
-				throw new BadRequestException("Codigo da porta nao informado");
-			}
-			
-			Long codigoPorta = Long.parseLong(request.getAttribute(CODIGO_PORTA).toString());
+			Long codigoPorta = obterCodigoPorta(request);
 			
 			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
 			
@@ -240,7 +245,11 @@ public class UsuarioControle {
 			if(parametroTolerancia != null && Strings.isNotEmpty(parametroTolerancia.getValor())) {				
 				tolerancia = Conversao.stringToDouble(parametroTolerancia.getValor(), "Erro ao converter o tipo do parametro de tolerancia");				
 			}
-
+			
+			if(Strings.isEmpty(usuario.get().getNomeAudio())) {
+				throw new NotFoundException("Usuario sem audio cadastrado");
+			}
+			
 			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
 			
 			int[] bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
@@ -299,7 +308,7 @@ public class UsuarioControle {
 		try {
 			
 			if(request.getAttribute(EMAIL_USUARIO) == null) {
-				throw new BadRequestException("E-mail do usuário nao informado");
+				throw new BadRequestException("E-mail do usuario nao informado");
 			}
 						
 			Optional<Usuario> usuario = usuariosRepositorio.findByEmail(request.getAttribute(EMAIL_USUARIO).toString());
