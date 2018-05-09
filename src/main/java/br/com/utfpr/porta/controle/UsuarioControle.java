@@ -163,6 +163,9 @@ public class UsuarioControle {
 			
 			Porta porta = obterPorta(codigoPorta);
 			
+			LOG.info("Requisição de autenticação de senha digitada: {} na porta {}", usuario.get().getCodigoNome(), porta.getCodigoDescricao());
+			LOG.info("Senha digitada: {}", autenticacaoSenha.getSenha());
+			
 			if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
 				throw new UnauthorizedException("Usuario sem autorizacao para acesso a porta desejada");
 			}
@@ -234,6 +237,8 @@ public class UsuarioControle {
 			Optional<Usuario> usuario = obterUsuario(Conversao.convertHexToDecimal(audioDto.getRfid(), true));
 			
 			Porta porta = obterPorta(codigoPorta);
+			
+			LOG.info("Requisição de autenticação de senha falada: {} na porta {}", usuario.get().getCodigoNome(), porta.getCodigoDescricao());
 			
 			if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
 				throw new UnauthorizedException("Usuario sem autorizacao para acesso a porta desejada");
