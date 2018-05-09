@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import br.com.utfpr.porta.controle.dto.ErroDto;
 import br.com.utfpr.porta.controle.dto.TokenDto;
+import br.com.utfpr.porta.repositorio.Portas;
+import br.com.utfpr.porta.repositorio.Usuarios;
 import br.com.utfpr.porta.response.Response;
 import br.com.utfpr.porta.seguranca.dto.JwtAuthenticationDto;
 import br.com.utfpr.porta.seguranca.dto.PortaJwtAuthenticationDto;
@@ -49,6 +51,12 @@ public class AutenticacaoControle {
 
 	@Autowired
 	private UserDetailsService userDetailsService;
+	
+	@Autowired
+	private Portas portaRepositorio;
+	
+	@Autowired
+	private Usuarios usuarioRepositorio;
 	
 	private String gerarTokenJwt(JwtAuthenticationDto authenticationDto) {
 		
@@ -77,9 +85,14 @@ public class AutenticacaoControle {
 			responseErro.setData(erro);
 			return ResponseEntity.badRequest().body(responseErro);
 		}
-			
+					
 		String token = "";
-		try {			
+		try {	
+			
+			if(!portaRepositorio.exists(Long.parseLong(portaJwtDto.getId()))) {
+				throw new BadCredentialsException("Porta não existe");
+			}
+			
 			token = gerarTokenJwt(portaJwtDto);
 		}
 		catch(BadCredentialsException e) {
@@ -87,10 +100,14 @@ public class AutenticacaoControle {
 			responseErro.setData(new ErroDto("Código e/ou senha não conferem"));
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseErro);
 		}
+		catch(NumberFormatException e) {
+			LOGGER.error(e.getMessage());
+			responseErro.setData(new ErroDto("Código da porta não identificado"));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErro);
+		}
 		catch(Exception e) {
 			LOGGER.error(e.getMessage());
-			erro.addError(e.getMessage());
-			responseErro.setData(erro);
+			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
 		
@@ -119,7 +136,12 @@ public class AutenticacaoControle {
 		}
 			
 		String token = "";
-		try {			
+		try {		
+			
+			if(!usuarioRepositorio.findByEmail(usuarioJwtDto.getEmail()).isPresent()) {
+				throw new BadCredentialsException("Usuário não existe");
+			}
+			
 			token = gerarTokenJwt(usuarioJwtDto);
 		}
 		catch(BadCredentialsException e) {
@@ -129,8 +151,7 @@ public class AutenticacaoControle {
 		}
 		catch(Exception e) {
 			LOGGER.error(e.getMessage());
-			erro.addError(e.getMessage());
-			responseErro.setData(erro);
+			responseErro.setData(new ErroDto(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseErro);
 		}
 		
