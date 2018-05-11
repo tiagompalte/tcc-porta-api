@@ -43,9 +43,9 @@ public class Conversao {
 			}
 		}
 		
-		int numero;
+		Long numero;
 		try {
-			numero = Integer.parseInt(concatenar.toString(), 16);
+			numero = Long.parseLong(concatenar.toString(), 16);
 		}
 		catch(NumberFormatException e) {
 			throw new ConversaoException("Erro ao converter código hexadecimal em decimal. ".concat(e.getMessage()));

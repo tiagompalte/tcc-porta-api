@@ -155,6 +155,8 @@ public class UsuarioControle {
 		
 		try {
 			
+			LOG.info("RFID: {} Senha digitada: {}", autenticacaoSenha.getRfid(), autenticacaoSenha.getSenha());
+			
 			Long codigoPorta = obterCodigoPorta(request);
 			
 			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
@@ -164,7 +166,6 @@ public class UsuarioControle {
 			Porta porta = obterPorta(codigoPorta);
 			
 			LOG.info("Requisição de autenticação de senha digitada: {} na porta {}", usuario.get().getCodigoNome(), porta.getCodigoDescricao());
-			LOG.info("Senha digitada: {}", autenticacaoSenha.getSenha());
 			
 			if(!autorizacaoServico.validarAcessoUsuario(porta, usuario.get(), dataHora)) {
 				throw new UnauthorizedException("Usuario sem autorizacao para acesso a porta desejada");
