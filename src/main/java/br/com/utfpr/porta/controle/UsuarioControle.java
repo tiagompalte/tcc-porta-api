@@ -154,9 +154,7 @@ public class UsuarioControle {
 		Response<UsuarioAcessoDto> responseMensagem = new Response<>();
 		
 		try {
-			
-			LOG.info("RFID: {} Senha digitada: {}", autenticacaoSenha.getRfid(), autenticacaoSenha.getSenha());
-			
+						
 			Long codigoPorta = obterCodigoPorta(request);
 			
 			LocalDateTime dataHora = converterZoneParaLocalDateTime(zone);
@@ -258,7 +256,7 @@ public class UsuarioControle {
 			
 			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
 			
-			int[] bufferRecebido = Conversao.stringToInt(audioDto.getAudio());
+			int[] bufferRecebido = Conversao.hexToInt(audioDto.getAudio());
 			
 			LOG.info("Tamanho do audio: {}", bufferRecebido.length);
 			

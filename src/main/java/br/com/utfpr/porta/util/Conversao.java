@@ -128,6 +128,17 @@ public class Conversao {
 	    return ints;
 	}
 	
+	public static int[] hexToInt(String hex) {
+		if(Strings.isEmpty(hex)) {
+			throw new NullPointerException();
+		}
+		int[] ints = new int[hex.length()/2];
+		for(int i = 0; i < ints.length; i++) {
+			ints[i] = Integer.parseInt(hex.substring(2*i, 2*i+2), 16);
+		}
+		return ints;
+	}
+	
 	public static double stringToDouble(String texto, String mensagemErro) {
 		
 		if(Strings.isEmpty(texto)) {
