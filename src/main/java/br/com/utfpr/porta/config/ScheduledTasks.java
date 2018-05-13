@@ -16,6 +16,8 @@ import br.com.utfpr.porta.repositorio.Parametros;
 @Component
 public class ScheduledTasks {
 	
+	private static final String PARAMETRO_API = "URL_API";
+	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTasks.class);
 		
 	@Autowired
@@ -27,10 +29,10 @@ public class ScheduledTasks {
     @Scheduled(initialDelay = 0, fixedDelay = 1500000) //25 minutos
     public void heyApiNaoDurma() {
     	
-    		Parametro parUrlApi = parametroRepositorio.findOne("URL_API");
+    		Parametro parUrlApi = parametroRepositorio.findOne(PARAMETRO_API);
 		
 		if(parUrlApi == null || Strings.isEmpty(parUrlApi.getValor())) {
-			LOGGER.error("Erro no ping no serviço API: Parâmetro URL_API não cadastrado");
+			LOGGER.error("Erro no ping no serviço API. Parâmetro {} não cadastrado", PARAMETRO_API);
 			return;
 		}
 				
