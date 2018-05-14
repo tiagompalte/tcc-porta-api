@@ -35,6 +35,7 @@ import br.com.utfpr.porta.controle.exception.NotFoundException;
 import br.com.utfpr.porta.controle.exception.UnauthorizedException;
 import br.com.utfpr.porta.modelo.Parametro;
 import br.com.utfpr.porta.modelo.Porta;
+import br.com.utfpr.porta.modelo.TipoAutenticacao;
 import br.com.utfpr.porta.modelo.Usuario;
 import br.com.utfpr.porta.repositorio.Parametros;
 import br.com.utfpr.porta.repositorio.Portas;
@@ -42,6 +43,7 @@ import br.com.utfpr.porta.repositorio.Usuarios;
 import br.com.utfpr.porta.response.Response;
 import br.com.utfpr.porta.servico.AutorizacaoServico;
 import br.com.utfpr.porta.servico.LogServico;
+import br.com.utfpr.porta.servico.excecao.RegistrarLogExcecao;
 import br.com.utfpr.porta.storage.AudioStorage;
 import br.com.utfpr.porta.util.Algorithm;
 import br.com.utfpr.porta.util.Conversao;
@@ -174,13 +176,16 @@ public class UsuarioControle {
 			if(!pass.matches(autenticacaoSenha.getSenha(), usuario.get().getSenhaTeclado())) {
 				throw new UnauthorizedException("Senha incorreta");
 			}
-							
-			logServico.entrarPorta(usuario.get(), porta, dataHora, "digitada");
-						
+			
 			responseMensagem.setData(new UsuarioAcessoDto("Autorizado", usuario.get().getPessoa().getNome()));
 			
 			LOG.info("Usuário {} acesso com senha digitada na porta {}", usuario.get().getCodigoNome(), porta.getCodigoDescricao());
 			
+			logServico.entrarPorta(usuario.get(), porta, dataHora, TipoAutenticacao.SENHA_DIGITADA);
+			
+		}
+		catch(RegistrarLogExcecao e) {
+			LOG.error(e.getMessage());
 		}
 		catch(BadRequestException e) {
 			LOG.error(e.getMessage());
@@ -266,12 +271,15 @@ public class UsuarioControle {
 				throw new UnauthorizedException("Senha falada nao confere");
 			}
 			
-			logServico.entrarPorta(usuario.get(), porta, dataHora, "falada");
-						
 			responseMensagem.setData(new UsuarioAcessoDto("Autorizado", usuario.get().getPessoa().getNome()));
 			
 			LOG.info("Usuário {} acesso com senha falada na porta {}", usuario.get().getCodigoNome(), porta.getCodigoDescricao());
 			
+			logServico.entrarPorta(usuario.get(), porta, dataHora, TipoAutenticacao.SENHA_FALADA);
+			
+		}
+		catch(RegistrarLogExcecao e) {
+			LOG.error(e.getMessage());
 		}
 		catch(BadRequestException e) {
 			LOG.error(e.getMessage());
