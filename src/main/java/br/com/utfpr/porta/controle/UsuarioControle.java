@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -47,6 +48,7 @@ import br.com.utfpr.porta.servico.excecao.RegistrarLogExcecao;
 import br.com.utfpr.porta.storage.AudioStorage;
 import br.com.utfpr.porta.util.Algorithm;
 import br.com.utfpr.porta.util.Conversao;
+import br.com.utfpr.porta.util.LZW;
 
 
 @Controller
@@ -261,7 +263,9 @@ public class UsuarioControle {
 			
 			int[] bufferDatabase = Conversao.comprimirAudio(audioStorage.recuperar(usuario.get().getNomeAudio()));
 			
-			int[] bufferRecebido = Conversao.hexToInt(audioDto.getAudio());
+			List<String> compress = Stream.of(audioDto.getAudio().split("")).map(String::trim).collect(Collectors.toList());
+						
+			int[] bufferRecebido = Conversao.hexToInt(LZW.decompress(compress));
 			
 			LOG.info("Tamanho do audio: {}", bufferRecebido.length);
 			
