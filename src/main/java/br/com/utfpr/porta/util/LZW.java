@@ -6,7 +6,8 @@ import java.util.Map;
 
 /**
  * The Lempel-Ziv-Welch (LZW) algorithm provides loss-less data compression
- * @author http://rosettacode.org/wiki/LZW_compression
+ * @author Abraham Lempel; Abraham Lempel; Terry Welch
+ * @see http://rosettacode.org/wiki/LZW_compression
  */
 public class LZW {
 	

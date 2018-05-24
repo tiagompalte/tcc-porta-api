@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 public class Algorithm {
 
-	private static final int NUM_AMOSTRAS = 22000; // 1.5*16000
+	private static final int NUM_AMOSTRAS = 12000; // 1.5*8000
 	private static final int DELAY_MAX = 1600;
 	private static final Logger LOG = LoggerFactory.getLogger(Algorithm.class);
 

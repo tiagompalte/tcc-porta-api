@@ -47,10 +47,10 @@ public class ScheduledTasks {
 				con.setRequestProperty("User-Agent", "Mozilla/5.0");			
 				responseCode = con.getResponseCode();
 				tentativas++;
-				LOGGER.info("Ping no serviço de API: Tentativa: {} Resoista: {}", tentativas, responseCode);
+				LOGGER.info("Ping no serviço de API: Tentativa: {} Resposta: {}", tentativas, responseCode);
 				Thread.sleep(3000);
 			}
-			while(responseCode != HttpURLConnection.HTTP_OK && tentativas < 10);
+			while((responseCode != HttpURLConnection.HTTP_OK || responseCode != HttpURLConnection.HTTP_NOT_MODIFIED) && tentativas < 10);
 		}
 		catch(Exception e) {
 			LOGGER.error("Erro no ping no serviço de API: ", e);

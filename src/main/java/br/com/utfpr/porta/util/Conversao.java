@@ -64,7 +64,7 @@ public class Conversao {
 			}
 			
 			AudioInputStream audioInput = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audioByte));				
-			AudioFormat audioFormat = new AudioFormat(16000, 8, 1, true, audioInput.getFormat().isBigEndian());				
+			AudioFormat audioFormat = new AudioFormat(8000, 8, 1, false, audioInput.getFormat().isBigEndian());				
 			AudioInputStream outStream = AudioSystem.getAudioInputStream(audioFormat, audioInput);								
 			File tempFile = File.createTempFile("audio", ".temp");
 			AudioSystem.write(outStream, Type.WAVE, tempFile);				
