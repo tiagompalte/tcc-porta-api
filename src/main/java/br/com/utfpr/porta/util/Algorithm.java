@@ -25,6 +25,22 @@ public class Algorithm {
 
 		return maior;
 	}
+	
+	private static int[] removeAvg(int[] buffer) {
+		int media = 0;
+		
+		for (int i = 0; i < buffer.length; i++) {
+			media += buffer[i];
+		}
+		
+		media /= buffer.length;
+		
+		for (int i = 0; i < buffer.length; i++) {
+			buffer[i] -= media;
+		}
+		
+		return buffer;
+	}
 
 	private static int[] zeroFill(int[] buffer) {
 		int[] bufferZ = new int[NUM_AMOSTRAS + 2 * DELAY_MAX];
@@ -68,7 +84,9 @@ public class Algorithm {
 
 	public static boolean validate(double tolerancia, int[] bufferDatabase, int[] bufferRecebido) throws Exception {
 		
-		try {			
+		try {	
+			bufferDatabase = removeAvg(bufferDatabase);
+			bufferRecebido = removeAvg(bufferRecebido);
 			int[] bufferDatabaseZ = zeroFill(bufferDatabase);
 			int[] bufferRecebidoZ = zeroFill(bufferRecebido);
 			
