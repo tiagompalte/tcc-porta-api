@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 public class Algorithm {
 
 	private static final int NUM_AMOSTRAS = 12000; // 1.5*8000
-	private static final int DELAY_MAX = 1600;
+	private static final int DELAY_MAX = 4000;
 	private static final Logger LOG = LoggerFactory.getLogger(Algorithm.class);
 
 	private Algorithm() {
@@ -25,7 +25,7 @@ public class Algorithm {
 
 		return maior;
 	}
-
+	
 	private static int[] zeroFill(int[] buffer) {
 		int[] bufferZ = new int[NUM_AMOSTRAS + 2 * DELAY_MAX];
 
@@ -68,7 +68,7 @@ public class Algorithm {
 
 	public static boolean validate(double tolerancia, int[] bufferDatabase, int[] bufferRecebido) throws Exception {
 		
-		try {			
+		try {	
 			int[] bufferDatabaseZ = zeroFill(bufferDatabase);
 			int[] bufferRecebidoZ = zeroFill(bufferRecebido);
 			
